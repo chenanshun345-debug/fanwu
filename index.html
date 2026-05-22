@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>凡屋勤务清单</title>
+<style>
+:root{
+  --bg:#F5F3EF;--surface:#FFFFFF;--surface2:#EFECE7;
+  --border:#E4DFD8;--border2:#CCC6BC;
+  --text:#1C1916;--text2:#6B6560;--text3:#A09890;
+  --accent:#2C2420;
+  --green:#376837;--green-bg:#EAF3E8;
+  --amber:#8A5218;--amber-bg:#FDF3E2;
+  --blue:#1A4470;--blue-bg:#E8EFF8;
+  --r:12px;--r-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:-apple-system,'PingFang SC','Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;display:flex;flex-direction:column;height:100%}
+
+/* HEADER */
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:env(safe-area-inset-top,0) 0 0;position:sticky;top:0;z-index:100;flex-shrink:0}
+.hdr-inner{padding:14px 16px 0}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.brand{font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.page-title{font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.4px}
+.date-pill{font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;white-space:nowrap;margin-top:2px}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.prog-lbl{font-size:12px;color:var(--text2)}
+.prog-cnt{font-size:12px;font-weight:600;color:var(--text)}
+.prog-track{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-bottom:12px}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .35s cubic-bezier(.4,0,.2,1)}
+.tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--border)}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:10px 16px;font-size:13px;font-weight:500;color:var(--text3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap}
+.tab.active{color:var(--text);border-bottom-color:var(--accent)}
+
+/* BODY */
+.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.content{padding:14px 14px 130px}
+.panel{display:none}.panel.active{display:block}
+
+/* SECTION */
+.section{margin-bottom:18px}
+.sec-hd{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sec-hd::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* CARD */
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:6px}
+
+/* ITEM */
+.item{display:flex;align-items:flex-start;gap:10px;padding:13px 14px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-user-select:none;user-select:none;transition:background .1s}
+.item:last-child{border-bottom:none}
+.item.done{background:#FAFAF8}
+.item.done .item-lbl{color:var(--text2);text-decoration:line-through;text-decoration-color:var(--border2)}
+.cb{width:22px;height:22px;border:1.5px solid var(--border2);border-radius:6px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s;background:var(--surface)}
+.cb.on{background:var(--accent);border-color:var(--accent)}
+.cb.on::after{content:'';width:12px;height:7px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translateY(-1px);display:block}
+.item-body{flex:1;min-width:0}
+.item-lbl{font-size:14px;color:var(--text);line-height:1.45;font-weight:500}
+.item-sub{font-size:12px;color:var(--text2);margin-top:2px;line-height:1.35}
+.item-rt{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+
+/* BADGE */
+.badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;white-space:nowrap}
+.bg{background:var(--green-bg);color:var(--green)}
+.ba{background:var(--amber-bg);color:var(--amber)}
+.bb{background:var(--blue-bg);color:var(--blue)}
+.bx{background:var(--surface2);color:var(--text2)}
+
+/* DETAIL */
+.detail{display:none;padding:0 14px 14px 46px}
+.detail.open{display:block}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.chip{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);padding:5px 10px;border:1px solid var(--border);border-radius:20px;cursor:pointer;background:var(--surface);transition:all .15s;-webkit-user-select:none;user-select:none}
+.chip input{display:none}
+.chip.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* TEXTAREA */
+.fl{font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:500;letter-spacing:.03em;margin-top:8px}
+textarea{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;color:var(--text);background:var(--bg);resize:none;font-family:inherit;line-height:1.5;outline:none;transition:border .15s}
+textarea:focus{border-color:var(--accent);background:var(--surface)}
+
+/* PHOTO */
+.photo{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);background:var(--surface2);border:1px dashed var(--border2);border-radius:var(--r-sm);padding:5px 9px;cursor:pointer;white-space:nowrap;transition:all .15s;-webkit-user-select:none;user-select:none}
+.photo.done{background:var(--green-bg);border-style:solid;border-color:var(--green);color:var(--green)}
+
+/* STEPS */
+.steps{display:flex;flex-direction:column;gap:7px}
+.step{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text2);cursor:pointer;-webkit-user-select:none;user-select:none;padding:1px 0}
+.step-cb{width:18px;height:18px;border:1.5px solid var(--border2);border-radius:5px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.step-cb.on{background:var(--green);border-color:var(--green)}
+.step-cb.on::after{content:'';width:9px;height:5px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(-45deg) translateY(-1px);display:block}
+.step.done .step-txt{text-decoration:line-through;color:var(--text3)}
+
+/* REWARD */
+.reward{background:var(--amber-bg);border:1px solid #E0C070;border-radius:var(--r-sm);padding:9px 12px;font-size:12px;color:var(--amber);margin-bottom:8px;line-height:1.5}
+
+/* INCOME PANEL */
+.inc-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:10px}
+.inc-hd{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.inc-title{font-size:14px;font-weight:600;color:var(--text)}
+.inc-subtitle{font-size:11px;color:var(--text3);margin-top:2px}
+.inc-total{font-size:26px;font-weight:700;color:var(--green);line-height:1}
+.inc-total-sub{font-size:11px;color:var(--text3);text-align:right;margin-top:3px}
+.inc-row{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border);font-size:13px}
+.inc-row:last-child{border-bottom:none}
+.inc-row.base{font-weight:500}
+.inc-lbl{color:var(--text2);flex:1}
+.inc-count{font-size:12px;color:var(--text3);margin:0 8px}
+.inc-amt{font-weight:600;color:var(--green);min-width:52px;text-align:right}
+.inc-note{font-size:11px;color:var(--text3);padding:10px 16px;border-top:1px solid var(--border);line-height:1.5;background:var(--bg)}
+
+/* HISTORY PANEL */
+.hist-empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
+.hist-item{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);margin-bottom:8px;overflow:hidden}
+.hist-hd{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer;-webkit-user-select:none;user-select:none}
+.hist-date{font-size:13px;font-weight:600;color:var(--text)}
+.hist-meta{display:flex;gap:6px;align-items:center}
+.hist-score{font-size:12px;color:var(--text2)}
+.hist-cards{font-size:11px;font-weight:600;color:var(--green);background:var(--green-bg);padding:2px 7px;border-radius:8px}
+.hist-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}
+.hist-body.open{display:block}
+.hist-section{margin-top:10px}
+.hist-sec-title{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+.hist-text{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap}
+
+/* MILESTONE */
+.mile-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:10px}
+.mile-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.mile-row:last-child{border-bottom:none}
+.mile-icon{font-size:20px;flex-shrink:0}
+.mile-body{flex:1;min-width:0}
+.mile-lbl{font-size:13px;font-weight:500;color:var(--text)}
+.mile-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.mile-bar-wrap{margin-top:5px}
+.mile-bar{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.mile-fill{height:100%;border-radius:2px;transition:width .4s ease;background:var(--accent)}
+.mile-fill.done{background:var(--green)}
+.mile-pct{font-size:10px;color:var(--text3);margin-top:3px}
+.mile-badge{flex-shrink:0;font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;background:var(--surface2);color:var(--text2)}
+.mile-badge.done{background:var(--green-bg);color:var(--green)}
+
+/* BOTTOM BAR */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0));z-index:99}
+.btn-main{width:100%;padding:14px;background:var(--accent);color:#fff;font-size:15px;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.02em;transition:opacity .15s}
+.btn-main:active{opacity:.82}
+.btn-main.submitted{background:var(--green)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:200;display:none;align-items:flex-end}
+.overlay.open{display:flex}
+.sheet{background:var(--surface);border-radius:var(--r) var(--r) 0 0;width:100%;max-height:88vh;display:flex;flex-direction:column;animation:up .28s cubic-bezier(.32,.72,0,1)}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-hd{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.sheet-title{font-size:16px;font-weight:600}
+.sheet-close{width:28px;height:28px;border-radius:50%;background:var(--surface2);border:none;font-size:16px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center}
+.sheet-body{flex:1;overflow-y:auto;padding:14px}
+.preview-box{background:var(--bg);border-radius:var(--r-sm);border:1px solid var(--border);padding:14px;font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;word-break:break-all;min-height:100px}
+.sheet-actions{padding:10px 14px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0));flex-shrink:0;display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border)}
+.btn-act{width:100%;padding:13px;border-radius:var(--r);font-size:14px;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s}
+.btn-act:active{opacity:.8}
+.btn-share{background:var(--accent);color:#fff}
+.btn-copy{background:var(--surface2);color:var(--text);font-weight:500}
+.btn-danger{background:var(--bg);color:#8A2A2A;border:1px solid #E0C0C0;font-weight:500}
+
+/* TOAST */
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(28,25,22,.88);color:#fff;padding:10px 18px;border-radius:var(--r);font-size:14px;z-index:300;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* CONFIRM MODAL */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-overlay.open{display:flex}
+.confirm-box{background:var(--surface);border-radius:var(--r);width:100%;max-width:320px;overflow:hidden}
+.confirm-body{padding:20px 18px 16px;text-align:center}
+.confirm-title{font-size:16px;font-weight:600;margin-bottom:8px}
+.confirm-msg{font-size:13px;color:var(--text2);line-height:1.5}
+.confirm-actions{display:flex;border-top:1px solid var(--border)}
+.confirm-btn{flex:1;padding:13px;font-size:14px;border:none;cursor:pointer;background:none}
+.confirm-btn.cancel{color:var(--text2);border-right:1px solid var(--border)}
+.confirm-btn.ok{color:#8A2A2A;font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-top">
+      <div>
+        <div class="brand">凡屋实木家具 · 福州金山展厅</div>
+        <div class="page-title">勤务工作清单</div>
+      </div>
+      <div class="date-pill" id="hdr-date"></div>
+    </div>
+    <div class="prog-row"><span class="prog-lbl" id="prog-lbl">今日完成进度</span><span class="prog-cnt" id="prog-txt">0 / 0</span></div>
+    <div class="prog-track"><div class="prog-fill" id="prog-bar" style="width:0%"></div></div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="sw('daily',this)">📋 今日清单</button>
+    <button class="tab" onclick="sw('weekly',this)">📅 周循环</button>
+    <button class="tab" onclick="sw('monthly',this)">🏆 月度达标</button>
+    <button class="tab" onclick="sw('income',this)">💰 收入统计</button>
+    <button class="tab" onclick="sw('history',this)">📂 历史记录</button>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+<div class="content">
+
+<!-- ====== 今日清单 ====== -->
+<div class="panel active" id="panel-daily">
+
+<div class="section">
+  <div class="sec-hd">08:50 到岗 · 开店</div>
+  <div class="card">
+    <div class="item" onclick="tog(this,'arrive')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">08:50 准时到岗</div></div>
+      <div class="item-rt"><span class="badge bb">开店</span></div>
+    </div>
+    <div class="item" onclick="togX(this,'det-open','open_check')">
+      <div class="cb"></div>
+      <div class="item-body">
+        <div class="item-lbl">开灯 · 开空调 · 带电家具通电</div>
+        <div class="item-sub">展厅全部灯具、空调、展示家具电源开启</div>
+      </div>
+      <div class="item-rt">
+        <span class="badge bb">开店</span>
+        <button class="photo" onclick="ph(event,this)">📷 开店打卡</button>
+      </div>
+    </div>
+    <div class="detail" id="det-open">
+      <div class="steps">
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">展厅灯全部开启</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">空调开启调至适宜温度</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">带电展示家具电源全部接通</span></div>
+      </div>
+    </div>
+    <div class="item" onclick="togX(this,'det-patrol','patrol')">
+      <div class="cb"></div>
+      <div class="item-body">
+        <div class="item-lbl">快速巡视六大区域</div>
+        <div class="item-sub">展厅 / 仓库 / 员工办公区 / 老板办公室 / 影棚 / 公共区域</div>
+      </div>
+      <div class="item-rt"><span class="badge bb">开店</span></div>
+    </div>
+    <div class="detail" id="det-patrol">
+      <div class="fl">异常情况记录</div>
+      <textarea id="ta-patrol" placeholder="各区域状态，无异常填「全部正常」" rows="3" oninput="saveField('patrol_note',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-hd">09:00–10:30 展厅清洁</div>
+  <div class="card">
+    <div class="item" onclick="tog(this,'floor_clean')">
+      <div class="cb"></div>
+      <div class="item-body">
+        <div class="item-lbl">地面拖扫 · 玻璃 / 镜面擦拭</div>
+        <div class="item-sub">玻璃展柜、落地镜、玻璃门无指印水渍</div>
+      </div>
+      <div class="item-rt"><button class="photo" onclick="ph(event,this)">📷 打卡</button></div>
+    </div>
+    <div class="item" onclick="tog(this,'furn_clean')">
+      <div class="cb"></div>
+      <div class="item-body">
+        <div class="item-lbl">所有家具表面除尘擦拭</div>
+        <div class="item-sub">无灰尘、无污渍、无手印，实木纹理清晰可见</div>
+      </div>
+      <div class="item-rt"><button class="photo" onclick="ph(event,this)">📷 打卡</button></div>
+    </div>
+    <div class="item" onclick="togX(this,'det-elec','elec_check')">
+      <div class="cb"></div>
+      <div class="item-body">
+        <div class="item-lbl">带电家具功能巡检</div>
+        <div class="item-sub">灯亮、充电口可用，全部通电确认</div>
+      </div>
+      <div class="item-rt"><span class="badge bb">每日</span></div>
+    </div>
+    <div class="detail" id="det-elec">
+      <div class="chips" id="chips-elec">
+        <label class="chip" onclick="saveChip('elec_status','全部正常',this)"><input type="radio" name="elec-d"><span>✅ 全部正常</span></label>
+        <label class="chip" onclick="saveChip('elec_status','有故障',this)"><input type="radio" name="elec-d"><span>⚠️ 有故障</span></label>
+      </div>
+      <div class="fl">故障记录（正常可不填）</div>
+      <textarea id="ta-elec" placeholder="设备名称及位置" rows="1" oninput="saveField('elec_note',this.value)"></textarea>
+    </div>
+    <div class="item" onclick="togX(this,'det-tag','tag_check')">
+      <div class="cb"></div>
+      <div class="item-body">
+        <div class="item-lbl">价签检查补全</div>
+        <div class="item-sub">所有展示家具均有价签，内容准确</div>
+      </div>
+      <div class="item-rt"><span class="badge bb">每日</span></div>
+    </div>
+    <div class="detail" id="det-tag">
+      <div class="chips">
+        <label class="chip" onclick="saveChip('tag_status','全部齐全',this)"><input type="radio" name="tag-d"><span>✅ 全部齐全</span></label>
+        <label class="chip" onclick="saveChip('tag_status','已补全',this)"><input type="radio" name="tag-d"><span>已补全</span></label>
+        <label class="chip" onclick="saveChip('tag_status','待制作',this)"><input type="radio" name="tag-d"><span>⚠️ 待制作</span></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-hd">10:30–11:30 办公区 · 公共区域</div>
+  <div class="card">
+    <div class="item" onclick="tog(this,'office_clean')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">员工办公区台面清洁 · 垃圾桶清理</div></div>
+      <div class="item-rt"><span class="badge bx">办公区</span></div>
+    </div>
+    <div class="item" onclick="tog(this,'common_clean')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">卫生间 / 茶水间巡检 · 补耗材</div></div>
+      <div class="item-rt"><span class="badge bx">公共区</span></div>
+    </div>
+    <div class="item" onclick="togX(this,'det-boss','boss_room')">
+      <div class="cb"></div>
+      <div class="item-body">
+        <div class="item-lbl">老板办公室清洁</div>
+        <div class="item-sub">⚠️ 进前告知老板 · 不触碰文件区 · 完成后告知</div>
+      </div>
+      <div class="item-rt"><span class="badge bx">办公室</span></div>
+    </div>
+    <div class="detail" id="det-boss">
+      <div class="chips">
+        <label class="chip" onclick="saveChip('boss_status','已告知并完成',this)"><input type="radio" name="boss-d"><span>✅ 已告知并完成</span></label>
+        <label class="chip" onclick="saveChip('boss_status','老板在内暂缓',this)"><input type="radio" name="boss-d"><span>⏸ 暂缓</span></label>
+        <label class="chip" onclick="saveChip('boss_status','指示免打扫',this)"><input type="radio" name="boss-d"><span>🙅 指示免打扫</span></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-hd">全天滚动 · 快递处理</div>
+  <div class="reward">💰 <strong>快递日清卡 +5元</strong>：当天所有到件签收、拆包、归位、通知同事全部完成</div>
+  <div class="card">
+    <div class="item" onclick="togX(this,'det-express','express_recv')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">签收当日到货快递</div><div class="item-sub">点击展开填写到货情况</div></div>
+      <div class="item-rt">
+        <span class="badge bg">日清卡</span>
+        <button class="photo" onclick="ph(event,this)">📷 签收单</button>
+      </div>
+    </div>
+    <div class="detail" id="det-express">
+      <div class="chips">
+        <label class="chip" onclick="saveChip('express_type','家具大件',this,'multi')"><input type="checkbox" name="exp"><span>家具/大件</span></label>
+        <label class="chip" onclick="saveChip('express_type','包材耗材',this,'multi')"><input type="checkbox" name="exp"><span>包材/耗材</span></label>
+        <label class="chip" onclick="saveChip('express_type','其他物料',this,'multi')"><input type="checkbox" name="exp"><span>其他物料</span></label>
+        <label class="chip" onclick="saveChip('express_type','今日无到货',this,'multi')"><input type="checkbox" name="exp"><span>今日无到货</span></label>
+      </div>
+      <div class="fl">到货品名及件数</div>
+      <textarea id="ta-express" placeholder="例：实木餐桌1件、包材若干 / 今日无到货" rows="2" oninput="saveField('express_note',this.value)"></textarea>
+    </div>
+    <div class="item" onclick="tog(this,'express_unbox')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">拆包验货归位</div><div class="item-sub">当天拆包、检查损伤、放置指定位置</div></div>
+      <div class="item-rt"><span class="badge bg">日清卡</span></div>
+    </div>
+    <div class="item" onclick="togX(this,'det-notify','express_notify')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">通知相关同事到货情况（当天完成）</div><div class="item-sub">点击展开填写</div></div>
+      <div class="item-rt"><span class="badge bg">日清卡</span></div>
+    </div>
+    <div class="detail" id="det-notify">
+      <div class="fl">通知对象及方式</div>
+      <textarea id="ta-notify" placeholder="例：微信通知设计师到货，已截图确认" rows="2" oninput="saveField('notify_note',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-hd">任务触发 · 样品打包发货</div>
+  <div class="reward">💰 <strong>样品打包发出卡 +50元/次</strong>：打包完成，核对无误，交快递发出</div>
+  <div class="card">
+    <div class="item" onclick="togX(this,'det-pack','pack_task')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">样品打包发货任务</div><div class="item-sub">有任务时展开 · 无任务可跳过</div></div>
+      <div class="item-rt">
+        <span class="badge ba">+50元</span>
+        <button class="photo" onclick="ph(event,this)">📷 打包成品</button>
+      </div>
+    </div>
+    <div class="detail" id="det-pack">
+      <div class="steps" id="steps-pack">
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">确认清单：品名 · 数量 · 收件人信息</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">采购合适纸箱与包材（气泡膜/珍珠棉/打包带）</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">与客服双人核对无误</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">打包：四角护角 · 实木表面覆气泡膜</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">打包带加固 · 粘贴快递单 · 核对收件信息</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">交快递或安排上门取件</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">通知客服确认发出</span></div>
+      </div>
+      <div class="fl">收件人 · 品名 · 快递单号</div>
+      <textarea id="ta-pack" placeholder="例：博主@xxx / 实木咖啡桌1件 / 圆通 75xxxxxxxx" rows="2" oninput="saveField('pack_note',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-hd">任务触发 · 新品到货布置</div>
+  <div class="reward">💰 <strong>新品布置完成卡 +80元/次</strong>：搬运、清洁、陈列，老板确认可拍摄</div>
+  <div class="card">
+    <div class="item" onclick="togX(this,'det-new','new_task')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">新品到货布置任务</div><div class="item-sub">有任务时展开 · 无任务可跳过</div></div>
+      <div class="item-rt">
+        <span class="badge ba">+80元</span>
+        <button class="photo" onclick="ph(event,this)">📷 布置成果</button>
+      </div>
+    </div>
+    <div class="detail" id="det-new">
+      <div class="steps">
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">提前告知老板/设计师，确认摆位方案</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">清理目标区域，预留搬运通道</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">对接送货师傅：核对品名数量，引导落位</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">拆包清洁，检查有无运输损伤</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">按方案完成陈列摆位，软装配件到位</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">带电家具接通电源，确认功能正常</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">废料打包当日清出，现场整洁</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">拍照发老板确认，达到可拍摄状态 ✅</span></div>
+      </div>
+      <div class="fl">到货品名 · 件数 · 陈列位置</div>
+      <textarea id="ta-new" placeholder="例：实木餐桌1张、餐椅4把 / 二层靠窗区域" rows="2" oninput="saveField('new_note',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-hd">任务触发 · 摄影 / 直播协作</div>
+  <div class="card">
+    <div class="item" onclick="togX(this,'det-photo','photo_task')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">摄影 / 直播协作任务</div><div class="item-sub">有拍摄/直播时展开 · 无则跳过</div></div>
+      <div class="item-rt"><span class="badge bx">协作</span></div>
+    </div>
+    <div class="detail" id="det-photo">
+      <div class="steps">
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">拍摄前协助整理道具、清洁背景</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">摄影期间全程跟随：搬运道具、递取摆件</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">直播期间维持展厅状态与灯光</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">拍摄/直播后，道具 100% 复原归位</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-hd">17:00–17:50 收尾 · 汇报</div>
+  <div class="card">
+    <div class="item" onclick="tog(this,'warehouse_tidy')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">仓库整理 · 工具归位 · 耗材检查</div><div class="item-sub">低于警戒量主动报采购</div></div>
+      <div class="item-rt"><span class="badge bx">收尾</span></div>
+    </div>
+    <div class="item" onclick="togX(this,'det-report','report_done')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">今日工作简报（必填）</div><div class="item-sub">填完后点底部按钮一键发给老板</div></div>
+      <div class="item-rt"><span class="badge ba">必填</span></div>
+    </div>
+    <div class="detail" id="det-report">
+      <div class="fl">✅ 今天完成了什么</div>
+      <textarea id="ta-done" placeholder="例：完成展厅清洁、签收3件快递并归位、协助新品布置…" rows="3" oninput="saveField('report_done',this.value)"></textarea>
+      <div class="fl">⚠️ 发现了什么问题</div>
+      <textarea id="ta-issue" placeholder="例：3号展柜灯泡损坏待更换 / 无问题" rows="2" oninput="saveField('report_issue',this.value)"></textarea>
+      <div class="fl">📌 明天需要跟进的事</div>
+      <textarea id="ta-todo" placeholder="例：明天上午采购纸箱 / 等设计师确认陈列方案" rows="2" oninput="saveField('report_todo',this.value)"></textarea>
+    </div>
+    <div class="item" onclick="togX(this,'det-close','close_check')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">17:50 闭店六项巡查</div><div class="item-sub">点击展开逐项确认</div></div>
+      <div class="item-rt">
+        <span class="badge bx">闭店</span>
+        <button class="photo" onclick="ph(event,this)">📷 闭店打卡</button>
+      </div>
+    </div>
+    <div class="detail" id="det-close">
+      <div class="steps">
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">关空调</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">关展厅所有电源</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">关全部灯具</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">检查水电无异常</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">门窗确认上锁</span></div>
+        <div class="step" onclick="togS(this)"><div class="step-cb"></div><span class="step-txt">消防通道畅通</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /daily -->
+
+<!-- ====== 周循环 ====== -->
+<div class="panel" id="panel-weekly">
+<div class="section">
+  <div class="sec-hd">每周一 · 周启动检查</div>
+  <div class="card">
+    <div class="item" onclick="tog(this,'w_elec')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">所有带电家具设备功能检查</div><div class="item-sub">逐一确认展示灯、充电口正常</div></div>
+      <div class="item-rt"><span class="badge bb">周一</span></div>
+    </div>
+    <div class="item" onclick="togX(this,'det-stock','w_stock')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">仓库包材库存盘点</div><div class="item-sub">纸箱 · 气泡膜 · 珍珠棉 · 打包带 · 饮用水</div></div>
+      <div class="item-rt"><span class="badge bb">周一</span></div>
+    </div>
+    <div class="detail" id="det-stock">
+      <div class="chips">
+        <label class="chip"><input type="radio" name="stock"><span>充足</span></label>
+        <label class="chip"><input type="radio" name="stock"><span>偏少，本周补</span></label>
+        <label class="chip"><input type="radio" name="stock"><span>⚠️ 已缺，立即买</span></label>
+      </div>
+      <textarea placeholder="需补充品类和数量" rows="1"></textarea>
+    </div>
+    <div class="item" onclick="tog(this,'w_plan')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">本周重点任务预排</div><div class="item-sub">向设计/客服确认本周新品、寄送、拍摄任务</div></div>
+      <div class="item-rt"><span class="badge bb">周一</span></div>
+    </div>
+  </div>
+</div>
+<div class="section">
+  <div class="sec-hd">每周三 · 家具结构检查</div>
+  <div class="card">
+    <div class="item" onclick="tog(this,'w_stable')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">所有家具贴地稳固性检查</div><div class="item-sub">不晃动、腿脚无松动、坐上去无异响</div></div>
+      <div class="item-rt"><span class="badge bx">周三</span></div>
+    </div>
+    <div class="item" onclick="tog(this,'w_drawer')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">抽屉 / 柜门开关顺滑度检查</div><div class="item-sub">无卡顿、无变形，开关顺畅</div></div>
+      <div class="item-rt">
+        <span class="badge bx">周三</span>
+        <button class="photo" onclick="ph(event,this)">📷 问题拍照</button>
+      </div>
+    </div>
+    <div class="item" onclick="tog(this,'w_damage')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">家具表面划痕 / 破损巡查</div></div>
+      <div class="item-rt">
+        <span class="badge bx">周三</span>
+        <button class="photo" onclick="ph(event,this)">📷 破损拍照</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="section">
+  <div class="sec-hd">每周五 · 仓库整理 + 周收尾</div>
+  <div class="card">
+    <div class="item" onclick="tog(this,'w_warehouse')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">仓库货架归位 · 废料清理 · 彻底清扫</div></div>
+      <div class="item-rt">
+        <span class="badge bx">周五</span>
+        <button class="photo" onclick="ph(event,this)">📷 仓库全景</button>
+      </div>
+    </div>
+    <div class="item" onclick="tog(this,'w_props')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">影棚道具盘点归位</div><div class="item-sub">摆件、地毯、软装配件全部归固定位置</div></div>
+      <div class="item-rt"><span class="badge bx">周五</span></div>
+    </div>
+    <div class="item" onclick="togX(this,'det-vendor','w_vendor')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">本周外部协调情况</div><div class="item-sub">独立对接送货师傅/快递员/维修人员 → +30元</div></div>
+      <div class="item-rt"><span class="badge ba">+30元</span></div>
+    </div>
+    <div class="detail" id="det-vendor">
+      <div class="chips">
+        <label class="chip"><input type="radio" name="vendor"><span>✅ 全部独立处理</span></label>
+        <label class="chip"><input type="radio" name="vendor"><span>部分需协助</span></label>
+        <label class="chip"><input type="radio" name="vendor"><span>本周无外部对接</span></label>
+      </div>
+      <textarea placeholder="外部协调事项记录" rows="1"></textarea>
+    </div>
+  </div>
+</div>
+<div class="section">
+  <div class="sec-hd">每月一次 · 实木保养</div>
+  <div class="card">
+    <div class="item" onclick="tog(this,'w_wax')">
+      <div class="cb"></div>
+      <div class="item-body"><div class="item-lbl">实木家具样品全面保养</div><div class="item-sub">擦油 / 打蜡 / 抛光，每月至少一次</div></div>
+      <div class="item-rt">
+        <span class="badge bx">每月</span>
+        <button class="photo" onclick="ph(event,this)">📷 保养后</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div><!-- /weekly -->
+
+<!-- ====== 月度达标 ====== -->
+<div class="panel" id="panel-monthly">
+  <div class="reward">🏆 <strong>展厅月度达标卡 +200元</strong>：13项全部达标 + 老板抽查无异议 → 月底随薪发放</div>
+  <div class="card" id="monthly-list"></div>
+  <div style="margin-top:12px">
+    <button class="btn-main" onclick="openMonthlyReport()">📤 提交月度自检结果给老板</button>
+  </div>
+</div>
+
+<!-- ====== 收入统计 ====== -->
+<div class="panel" id="panel-income">
+  <div class="inc-card">
+    <div class="inc-hd">
+      <div><div class="inc-title">本月预估收入</div><div class="inc-subtitle" id="inc-month-label"></div></div>
+      <div><div class="inc-total" id="inc-total">¥4,500</div><div class="inc-total-sub">自动统计</div></div>
+    </div>
+    <div id="inc-rows">
+      <div class="inc-row base"><span class="inc-lbl">基本底薪</span><span class="inc-amt">¥4,500</span></div>
+      <div class="inc-row"><span class="inc-lbl">📬 快递日清卡</span><span class="inc-count" id="ic-exp-n">×0天</span><span class="inc-amt" id="ic-exp-v">+¥0</span></div>
+      <div class="inc-row"><span class="inc-lbl">🏠 新品布置完成卡</span><span class="inc-count" id="ic-new-n">×0次</span><span class="inc-amt" id="ic-new-v">+¥0</span></div>
+      <div class="inc-row"><span class="inc-lbl">📦 样品打包发出卡</span><span class="inc-count" id="ic-pack-n">×0次</span><span class="inc-amt" id="ic-pack-v">+¥0</span></div>
+      <div class="inc-row"><span class="inc-lbl">✨ 展厅月度达标卡</span><span class="inc-count" id="ic-mon-n">×0次</span><span class="inc-amt" id="ic-mon-v">+¥0</span></div>
+      <div class="inc-row"><span class="inc-lbl">🤝 外部协调完成卡</span><span class="inc-count" id="ic-vnd-n">×0次</span><span class="inc-amt" id="ic-vnd-v">+¥0</span></div>
+      <div class="inc-row"><span class="inc-lbl">⭐ 老板看见卡</span><span class="inc-count" id="ic-bos-n">×0次</span><span class="inc-amt" id="ic-bos-v">+¥0</span></div>
+    </div>
+    <div class="inc-note" id="inc-tip">提交每日打卡后，任务卡自动累计到这里</div>
+  </div>
+
+  <!-- 里程碑 -->
+  <div class="mile-card">
+    <div class="inc-hd"><div class="inc-title">集卡里程碑</div></div>
+    <div id="mile-rows"></div>
+  </div>
+
+  <div style="margin-top:10px">
+    <button class="btn-act btn-danger" style="width:100%;border-radius:var(--r);padding:12px" onclick="confirmReset()">🗑 重置本月数据</button>
+  </div>
+</div>
+
+<!-- ====== 历史记录 ====== -->
+<div class="panel" id="panel-history">
+  <div id="hist-list"></div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /body -->
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar" id="bar-daily">
+  <button class="btn-main" id="submit-btn" onclick="openPreview()">
+    <span>📤</span><span id="submit-label">生成今日汇报 · 发送给老板</span>
+  </button>
+</div>
+
+<!-- PREVIEW MODAL -->
+<div class="overlay" id="modal" onclick="maybeClose(event)">
+  <div class="sheet">
+    <div class="sheet-hd">
+      <span class="sheet-title" id="modal-title">今日汇报预览</span>
+      <button class="sheet-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="preview-box" id="preview-txt"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-act btn-share" onclick="doSubmitAndShare()"><span>📤</span><span>提交记录 · 分享给老板</span></button>
+      <button class="btn-act btn-copy" onclick="doSubmitAndCopy()"><span>📋</span><span>提交记录 · 复制文本</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM RESET -->
+<div class="confirm-overlay" id="confirm-modal">
+  <div class="confirm-box">
+    <div class="confirm-body">
+      <div class="confirm-title">确认重置？</div>
+      <div class="confirm-msg">将清除本月所有提交记录和任务卡统计数据，操作不可恢复。</div>
+    </div>
+    <div class="confirm-actions">
+      <button class="confirm-btn cancel" onclick="document.getElementById('confirm-modal').classList.remove('open')">取消</button>
+      <button class="confirm-btn ok" onclick="doReset()">确认重置</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  STORAGE HELPERS
+// ═══════════════════════════════════════════
+const TODAY = (() => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+})();
+const MONTH_KEY = TODAY.slice(0,7); // "2024-05"
+
+function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){} }
+function load(key, def) { try { const v = localStorage.getItem(key); return v !== null ? JSON.parse(v) : def; } catch(e){ return def; } }
+
+// Today's draft (fields + checks)
+function getTodayDraft() { return load('draft_' + TODAY, {}); }
+function saveTodayDraft(draft) { store('draft_' + TODAY, draft); }
+
+// Monthly submissions array
+function getMonthRecords() { return load('month_' + MONTH_KEY, []); }
+function saveMonthRecords(r) { store('month_' + MONTH_KEY, r); }
+
+// Monthly card counts
+function getCardCounts() { return load('cards_' + MONTH_KEY, {exp:0,new:0,pack:0,mon:0,vnd:0,bos:0}); }
+function saveCardCounts(c) { store('cards_' + MONTH_KEY, c); }
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+const NOW = new Date();
+const DAYS = ['周日','周一','周二','周三','周四','周五','周六'];
+document.getElementById('hdr-date').textContent =
+  `${NOW.getMonth()+1}月${NOW.getDate()}日 ${DAYS[NOW.getDay()]}`;
+document.getElementById('inc-month-label').textContent =
+  `${NOW.getFullYear()}年${NOW.getMonth()+1}月`;
+
+// Restore today's draft
+(function restoreDraft() {
+  const d = getTodayDraft();
+  // Restore checkboxes
+  if (d.checks) {
+    Object.keys(d.checks).forEach(k => {
+      if (d.checks[k]) {
+        const el = document.querySelector(`[data-key="${k}"]`);
+        if (el) {
+          const cb = el.querySelector('.cb');
+          if (cb) { cb.classList.add('on'); el.classList.add('done'); }
+          const detId = el.getAttribute('data-det');
+          if (detId) { const det = document.getElementById(detId); if (det) det.classList.add('open'); }
+        }
+      }
+    });
+  }
+  // Restore textareas
+  const fields = ['patrol_note','elec_note','express_note','notify_note','pack_note','new_note','report_done','report_issue','report_todo'];
+  fields.forEach(k => {
+    const id = {patrol_note:'ta-patrol',elec_note:'ta-elec',express_note:'ta-express',notify_note:'ta-notify',pack_note:'ta-pack',new_note:'ta-new',report_done:'ta-done',report_issue:'ta-issue',report_todo:'ta-todo'}[k];
+    if (id && d[k]) { const el = document.getElementById(id); if (el) el.value = d[k]; }
+  });
+  // Restore submitted state
+  if (d.submitted) {
+    const btn = document.getElementById('submit-btn');
+    if (btn) { btn.classList.add('submitted'); document.getElementById('submit-label').textContent = '✅ 今日已提交 · 重新发送'; }
+  }
+  updProg();
+})();
+
+// ═══════════════════════════════════════════
+//  TAB SWITCH
+// ═══════════════════════════════════════════
+function sw(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('bar-daily').style.display = name === 'daily' ? '' : 'none';
+  if (name === 'income') renderIncome();
+  if (name === 'history') renderHistory();
+  if (name === 'monthly') {}
+  updProg();
+}
+
+// ═══════════════════════════════════════════
+//  ITEM TOGGLE
+// ═══════════════════════════════════════════
+function tog(el, key) {
+  const cb = el.querySelector('.cb');
+  const on = cb.classList.toggle('on');
+  el.classList.toggle('done', on);
+  if (key) { const d = getTodayDraft(); if (!d.checks) d.checks = {}; d.checks[key] = on; saveTodayDraft(d); }
+  updProg();
+}
+
+function togX(el, detId, key) {
+  const cb = el.querySelector('.cb');
+  const on = cb.classList.toggle('on');
+  el.classList.toggle('done', on);
+  const det = document.getElementById(detId);
+  if (det) det.classList.toggle('open', on);
+  if (key) { const d = getTodayDraft(); if (!d.checks) d.checks = {}; d.checks[key] = on; saveTodayDraft(d); }
+  updProg();
+}
+
+function togS(el) {
+  const cb = el.querySelector('.step-cb');
+  cb.classList.toggle('on');
+  el.classList.toggle('done');
+}
+
+// ═══════════════════════════════════════════
+//  FIELD SAVE
+// ═══════════════════════════════════════════
+function saveField(key, val) {
+  const d = getTodayDraft(); d[key] = val; saveTodayDraft(d);
+}
+
+function saveChip(key, val, chipEl, mode) {
+  if (mode === 'multi') {
+    chipEl.classList.toggle('sel');
+    const inp = chipEl.querySelector('input'); if (inp) inp.checked = chipEl.classList.contains('sel');
+  } else {
+    const name = chipEl.querySelector('input')?.name;
+    if (name) document.querySelectorAll(`input[name="${name}"]`).forEach(r => r.closest('.chip').classList.remove('sel'));
+    chipEl.classList.add('sel');
+    const inp = chipEl.querySelector('input'); if (inp) inp.checked = true;
+  }
+  const d = getTodayDraft(); d[key] = val; saveTodayDraft(d);
+}
+
+// ═══════════════════════════════════════════
+//  PHOTO
+// ═══════════════════════════════════════════
+function ph(e, btn) {
+  e.stopPropagation();
+  btn.textContent = '✅ 已打卡';
+  btn.classList.add('done');
+}
+
+// ═══════════════════════════════════════════
+//  PROGRESS
+// ═══════════════════════════════════════════
+function updProg() {
+  const active = document.querySelector('.panel.active');
+  if (!active) return;
+  if (active.id === 'panel-income' || active.id === 'panel-history') {
+    document.getElementById('prog-lbl').textContent = ''; document.getElementById('prog-txt').textContent = ''; document.getElementById('prog-bar').style.width='0%'; return;
+  }
+  if (active.id === 'panel-monthly') {
+    const pass = document.querySelectorAll('.mnum.pass').length;
+    const total = document.querySelectorAll('.mnum').length;
+    document.getElementById('prog-lbl').textContent = '月度达标进度';
+    document.getElementById('prog-txt').textContent = `${pass} / ${total}`;
+    document.getElementById('prog-bar').style.width = total ? (pass/total*100).toFixed(0)+'%' : '0%'; return;
+  }
+  document.getElementById('prog-lbl').textContent = '今日完成进度';
+  const items = active.querySelectorAll('.item');
+  const total = items.length;
+  const done = [...items].filter(i => i.querySelector('.cb.on')).length;
+  document.getElementById('prog-txt').textContent = `${done} / ${total}`;
+  document.getElementById('prog-bar').style.width = total ? (done/total*100).toFixed(0)+'%' : '0%';
+}
+
+// ═══════════════════════════════════════════
+//  MONTHLY CHECKLIST
+// ═══════════════════════════════════════════
+const MONTHLY_ITEMS = [
+  {l:'家具表面清洁',s:'所有样品表面无灰尘、无污渍、无手印，实木纹理清晰',f:'每日'},
+  {l:'家具结构稳固',s:'贴地不晃动，腿脚无松动，坐上去无异响',f:'每周'},
+  {l:'抽屉/柜门顺滑',s:'所有抽屉、柜门开关顺畅，无卡顿、无变形',f:'每周'},
+  {l:'带电家具正常',s:'插电家具全部通电，功能正常（灯亮、充电口可用）',f:'每日'},
+  {l:'家具保养完成',s:'本月已完成全套擦油/打蜡，实木表面有光泽感',f:'每月'},
+  {l:'价签齐全准确',s:'所有展示家具均有价签，内容准确，无缺失、无破损',f:'每日'},
+  {l:'陈列摆位整齐',s:'软装配件、摆件、地毯按规范位置摆放，无明显偏移',f:'每日'},
+  {l:'道具归位完整',s:'所有摆件道具有固定位置，拍摄/直播后100%复原',f:'每次后'},
+  {l:'地面整洁',s:'展厅地面无灰尘、无杂物、无污渍',f:'每日'},
+  {l:'玻璃/镜面清洁',s:'玻璃展柜、落地镜、玻璃门无指印水渍',f:'每日'},
+  {l:'灯光状态正常',s:'所有展厅灯具正常工作，无灯泡损坏',f:'每周'},
+  {l:'消防通道畅通',s:'通道无遮挡，消防设备位置清晰可见',f:'每日'},
+  {l:'耗材库存充足',s:'打包材料、清洁用品、饮用水库存不低于警戒量',f:'每周'},
+];
+(function buildMonthlyList() {
+  const c = document.getElementById('monthly-list');
+  MONTHLY_ITEMS.forEach((it, i) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-user-select:none;user-select:none';
+    div.innerHTML = `<div class="mnum" style="width:22px;height:22px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);font-size:10px;font-weight:700;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .15s">${i+1}</div>
+    <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">${it.l}<span style="font-size:10px;background:var(--surface2);color:var(--text3);padding:1px 6px;border-radius:8px;margin-left:5px">${it.f}</span></div><div style="font-size:11px;color:var(--text3);margin-top:2px">${it.s}</div></div>`;
+    if (i === MONTHLY_ITEMS.length-1) div.style.borderBottom = 'none';
+    div.onclick = function() {
+      const num = this.querySelector('.mnum');
+      num.classList.toggle('pass');
+      num.style.background = num.classList.contains('pass') ? 'var(--green)' : 'var(--surface2)';
+      num.style.color = num.classList.contains('pass') ? '#fff' : 'var(--text2)';
+      num.style.borderColor = num.classList.contains('pass') ? 'var(--green)' : 'var(--border)';
+      updProg();
+    };
+    c.appendChild(div);
+  });
+})();
+
+// ═══════════════════════════════════════════
+//  BUILD REPORT TEXT
+// ═══════════════════════════════════════════
+function buildReport() {
+  const d = getTodayDraft();
+  const items = document.querySelectorAll('#panel-daily .item');
+  const total = items.length;
+  const done = [...items].filter(i => i.querySelector('.cb.on')).length;
+  const cards = detectCards();
+  const dateStr = `${NOW.getFullYear()}年${NOW.getMonth()+1}月${NOW.getDate()}日 ${DAYS[NOW.getDay()]}`;
+
+  let txt = `📋 凡屋展厅勤务 · 日报\n`;
+  txt += `━━━━━━━━━━━━━━━━\n`;
+  txt += `📅 ${dateStr}\n`;
+  txt += `✅ 完成 ${done}/${total} 项\n`;
+  if (cards.labels.length) txt += `💰 今日任务卡：${cards.labels.join('、')}\n`;
+  txt += `━━━━━━━━━━━━━━━━\n\n`;
+  txt += `【今天完成了什么】\n${d.report_done || '（未填写）'}\n\n`;
+  txt += `【发现了什么问题】\n${d.report_issue || '无'}\n\n`;
+  txt += `【明天跟进的事】\n${d.report_todo || '无'}\n`;
+
+  const extras = [];
+  if (d.patrol_note && d.patrol_note !== '全部正常') extras.push(`巡视异常：${d.patrol_note}`);
+  if (d.express_note) extras.push(`快递到货：${d.express_note}`);
+  if (d.notify_note) extras.push(`通知情况：${d.notify_note}`);
+  if (d.pack_note) extras.push(`打包发货：${d.pack_note}`);
+  if (d.new_note) extras.push(`新品布置：${d.new_note}`);
+  if (extras.length) { txt += `\n【详情记录】\n`; extras.forEach(e => txt += `▸ ${e}\n`); }
+  txt += `\n━━━━━━━━━━━━━━━━\n凡屋实木家具 · 展厅勤务`;
+  return txt;
+}
+
+// ═══════════════════════════════════════════
+//  DETECT CARDS
+// ═══════════════════════════════════════════
+function detectCards() {
+  const d = getTodayDraft();
+  const checks = d.checks || {};
+  const labels = [];
+  const counts = {exp:0, new:0, pack:0, vnd:0, bos:0};
+
+  // 快递日清卡: 三项都完成
+  if (checks.express_recv && checks.express_unbox && checks.express_notify) {
+    labels.push('快递日清卡 +5元'); counts.exp = 1;
+  }
+  // 新品布置卡
+  if (checks.new_task && d.new_note) { labels.push('新品布置卡 +80元'); counts.new = 1; }
+  // 样品打包卡
+  if (checks.pack_task && d.pack_note) { labels.push('样品打包卡 +50元'); counts.pack = 1; }
+
+  return { labels, counts };
+}
+
+// ═══════════════════════════════════════════
+//  SUBMIT & SAVE RECORD
+// ═══════════════════════════════════════════
+function saveRecord(reportText) {
+  const cards = detectCards();
+  const d = getTodayDraft();
+  const items = document.querySelectorAll('#panel-daily .item');
+  const done = [...items].filter(i => i.querySelector('.cb.on')).length;
+
+  // Save to month records
+  const records = getMonthRecords();
+  const existing = records.findIndex(r => r.date === TODAY);
+  const record = {
+    date: TODAY,
+    done,
+    total: items.length,
+    report: d.report_done || '',
+    issue: d.report_issue || '',
+    todo: d.report_todo || '',
+    cards: cards.labels,
+    text: reportText,
+    ts: Date.now()
+  };
+  if (existing >= 0) records[existing] = record; else records.push(record);
+  records.sort((a,b) => b.date.localeCompare(a.date));
+  saveMonthRecords(records);
+
+  // Accumulate card counts
+  const cc = getCardCounts();
+  cc.exp += cards.counts.exp;
+  cc.new += cards.counts.new;
+  cc.pack += cards.counts.pack;
+  saveCardCounts(cc);
+
+  // Mark today as submitted
+  const draft = getTodayDraft();
+  draft.submitted = true;
+  saveTodayDraft(draft);
+
+  // Update submit button
+  const btn = document.getElementById('submit-btn');
+  btn.classList.add('submitted');
+  document.getElementById('submit-label').textContent = '✅ 今日已提交 · 重新发送';
+}
+
+// ═══════════════════════════════════════════
+//  PREVIEW MODAL
+// ═══════════════════════════════════════════
+let _rpt = '';
+function openPreview() {
+  _rpt = buildReport();
+  document.getElementById('modal-title').textContent = '今日汇报预览';
+  document.getElementById('preview-txt').textContent = _rpt;
+  document.getElementById('modal').classList.add('open');
+}
+
+function openMonthlyReport() {
+  const pass = document.querySelectorAll('.mnum.pass').length;
+  const total = MONTHLY_ITEMS.length;
+  let txt = `🏆 凡屋展厅 · 月度达标自检\n━━━━━━━━━━━━━━━━\n`;
+  txt += `${NOW.getFullYear()}年${NOW.getMonth()+1}月 / ${pass}/${total}项达标\n`;
+  txt += pass === total ? `✅ 全部达标，申请展厅月度达标卡 +200元\n` : `⚠️ ${total-pass}项未达标待整改\n`;
+  txt += `━━━━━━━━━━━━━━━━\n`;
+  MONTHLY_ITEMS.forEach((it,i) => {
+    const isPass = document.querySelectorAll('.mnum')[i]?.classList.contains('pass');
+    txt += `${isPass?'✅':'❌'} ${i+1}. ${it.l}\n`;
+  });
+  txt += `━━━━━━━━━━━━━━━━\n凡屋实木家具 · 展厅勤务`;
+  // Save monthly card if all passed
+  if (pass === total) {
+    const cc = getCardCounts(); cc.mon = (cc.mon||0) + 1; saveCardCounts(cc);
+  }
+  _rpt = txt;
+  document.getElementById('modal-title').textContent = '月度自检报告';
+  document.getElementById('preview-txt').textContent = txt;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function maybeClose(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+
+async function doSubmitAndShare() {
+  saveRecord(_rpt);
+  closeModal();
+  if (navigator.share) {
+    try { await navigator.share({ title:'凡屋展厅勤务日报', text: _rpt }); return; } catch(e){}
+  }
+  await copyText(_rpt);
+  toast('已复制 ✅ 数据已保存，粘贴到微信发给老板');
+}
+
+async function doSubmitAndCopy() {
+  saveRecord(_rpt);
+  closeModal();
+  await copyText(_rpt);
+  toast('已复制 ✅ 数据已保存，粘贴到微信发给老板');
+}
+
+async function copyText(txt) {
+  try { await navigator.clipboard.writeText(txt); }
+  catch(e) {
+    const ta = document.createElement('textarea');
+    ta.value = txt; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  RENDER INCOME
+// ═══════════════════════════════════════════
+function renderIncome() {
+  const cc = getCardCounts();
+  const RATES = {exp:5, new:80, pack:50, mon:200, vnd:30, bos:50};
+  const keys = ['exp','new','pack','mon','vnd','bos'];
+  const ids = ['ic-exp','ic-new','ic-pack','ic-mon','ic-vnd','ic-bos'];
+  const units = ['天','次','次','次','次','次'];
+  let bonus = 0;
+  keys.forEach((k,i) => {
+    const n = cc[k]||0, amt = n * RATES[k];
+    bonus += amt;
+    document.getElementById(ids[i]+'-n').textContent = `×${n}${units[i]}`;
+    document.getElementById(ids[i]+'-v').textContent = `+¥${amt}`;
+  });
+  document.getElementById('inc-total').textContent = `¥${(4500+bonus).toLocaleString()}`;
+
+  // Tip
+  const records = getMonthRecords();
+  const days = new Set(records.map(r => r.date)).size;
+  document.getElementById('inc-tip').textContent =
+    `本月已提交 ${days} 天记录 · 快递日清 ${cc.exp||0} 天 · 预计比底薪多 ¥${bonus}`;
+
+  // Milestones
+  const MILES = [
+    {k:'exp',icon:'📬',lbl:'快递日清卡',goal:20,unit:'张',reward:'物资礼品'},
+    {k:'new',icon:'🏠',lbl:'新品布置卡',goal:5,unit:'张',reward:'物资礼品'},
+    {k:'mon',icon:'✨',lbl:'展厅达标卡',goal:3,unit:'张',reward:'品质礼品'},
+    {k:'bos',icon:'⭐',lbl:'老板看见卡',goal:5,unit:'张',reward:'特选礼品'},
+  ];
+  const mr = document.getElementById('mile-rows');
+  mr.innerHTML = '';
+  MILES.forEach(m => {
+    const cur = cc[m.k]||0, pct = Math.min(100, Math.round(cur/m.goal*100));
+    const done = cur >= m.goal;
+    const div = document.createElement('div');
+    div.className = 'mile-row';
+    div.innerHTML = `<div class="mile-icon">${m.icon}</div>
+    <div class="mile-body">
+      <div class="mile-lbl">${m.lbl}</div>
+      <div class="mile-sub">${done ? `🎉 里程碑达成！→ ${m.reward}待兑现` : `${cur}/${m.goal}${m.unit}，还差${m.goal-cur}${m.unit}`}</div>
+      <div class="mile-bar-wrap"><div class="mile-bar"><div class="${done?'mile-fill done':'mile-fill'}" style="width:${pct}%"></div></div>
+      <div class="mile-pct">${pct}%</div></div>
+    </div>
+    <div class="mile-badge ${done?'done':''}">${done?'✅ 达成':'进行中'}</div>`;
+    mr.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  RENDER HISTORY
+// ═══════════════════════════════════════════
+function renderHistory() {
+  const records = getMonthRecords();
+  const c = document.getElementById('hist-list');
+  c.innerHTML = '';
+  if (!records.length) {
+    c.innerHTML = '<div class="hist-empty">暂无记录<br>提交今日打卡后自动保存</div>';
+    return;
+  }
+  records.forEach((r, idx) => {
+    const d = new Date(r.date);
+    const dayStr = DAYS[d.getDay()];
+    const hasCards = r.cards && r.cards.length > 0;
+    const div = document.createElement('div');
+    div.className = 'hist-item';
+    div.innerHTML = `
+      <div class="hist-hd" onclick="this.nextElementSibling.classList.toggle('open')">
+        <div>
+          <div class="hist-date">${r.date.slice(5).replace('-','月')}日 ${dayStr}</div>
+          <div class="hist-score" style="margin-top:2px;font-size:12px;color:var(--text3)">${r.done}/${r.total}项完成</div>
+        </div>
+        <div class="hist-meta">
+          ${hasCards ? `<span class="hist-cards">+任务卡</span>` : ''}
+          <span style="color:var(--text3);font-size:16px">›</span>
+        </div>
+      </div>
+      <div class="hist-body">
+        ${r.report ? `<div class="hist-section"><div class="hist-sec-title">今天完成</div><div class="hist-text">${r.report}</div></div>` : ''}
+        ${r.issue ? `<div class="hist-section"><div class="hist-sec-title">发现问题</div><div class="hist-text">${r.issue}</div></div>` : ''}
+        ${r.todo ? `<div class="hist-section"><div class="hist-sec-title">明天跟进</div><div class="hist-text">${r.todo}</div></div>` : ''}
+        ${hasCards ? `<div class="hist-section"><div class="hist-sec-title">任务卡</div><div class="hist-text" style="color:var(--green)">${r.cards.join('、')}</div></div>` : ''}
+      </div>`;
+    c.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  RESET
+// ═══════════════════════════════════════════
+function confirmReset() { document.getElementById('confirm-modal').classList.add('open'); }
+function doReset() {
+  store('month_' + MONTH_KEY, []);
+  store('cards_' + MONTH_KEY, {exp:0,new:0,pack:0,mon:0,vnd:0,bos:0});
+  document.getElementById('confirm-modal').classList.remove('open');
+  renderIncome();
+  toast('已重置本月数据');
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// init
+updProg();
+</script>
+</body>
+</html>
