@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>凡屋客服打卡系统</title>
+<style>
+:root{
+  --bg:#F5F3EF;--surface:#FFFFFF;--surface2:#EFECE7;
+  --border:#E4DFD8;--border2:#CCC6BC;
+  --text:#1C1916;--text2:#6B6560;--text3:#A09890;
+  --accent:#2C2420;
+  --green:#376837;--green-bg:#EAF3E8;
+  --amber:#8A5218;--amber-bg:#FDF3E2;
+  --blue:#1A4470;--blue-bg:#E8EFF8;
+  --red:#8A2A2A;--red-bg:#FBE8E8;
+  --gold:#8A6A00;--gold-bg:#FDF8E2;
+  --r:12px;--r-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:-apple-system,'PingFang SC','Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;display:flex;flex-direction:column;height:100%}
+
+/* HEADER */
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:env(safe-area-inset-top,0) 0 0;position:sticky;top:0;z-index:100;flex-shrink:0}
+.hdr-inner{padding:12px 16px 0}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.brand{font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+.page-title{font-size:19px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.date-pill{font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);padding:3px 9px;border-radius:20px;white-space:nowrap}
+.online-pill{font-size:11px;color:var(--green);background:var(--green-bg);border:1px solid #C0DFC0;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--border)}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:9px 14px;font-size:13px;font-weight:500;color:var(--text3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap}
+.tab.active{color:var(--text);border-bottom-color:var(--accent)}
+
+/* BODY */
+.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.content{padding:14px 14px 130px}
+.panel{display:none}.panel.active{display:block}
+
+/* SECTION */
+.section{margin-bottom:18px}
+.sec-hd{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sec-hd::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* CARD */
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:8px}
+
+/* ITEM */
+.item{display:flex;align-items:flex-start;gap:10px;padding:13px 14px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-user-select:none;user-select:none;transition:background .1s}
+.item:last-child{border-bottom:none}
+.item.done{background:#FAFAF8}
+.item.done .item-lbl{color:var(--text2);text-decoration:line-through;text-decoration-color:var(--border2)}
+.cb{width:22px;height:22px;border:1.5px solid var(--border2);border-radius:6px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s;background:var(--surface)}
+.cb.on{background:var(--accent);border-color:var(--accent)}
+.cb.on::after{content:'';width:12px;height:7px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translateY(-1px);display:block}
+.item-body{flex:1;min-width:0}
+.item-lbl{font-size:14px;color:var(--text);line-height:1.45;font-weight:500}
+.item-sub{font-size:12px;color:var(--text2);margin-top:2px;line-height:1.35}
+.item-rt{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+
+/* BADGE */
+.badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;white-space:nowrap}
+.bg{background:var(--green-bg);color:var(--green)}
+.ba{background:var(--amber-bg);color:var(--amber)}
+.bb{background:var(--blue-bg);color:var(--blue)}
+.bx{background:var(--surface2);color:var(--text2)}
+.br{background:var(--red-bg);color:var(--red)}
+.bgold{background:var(--gold-bg);color:var(--gold)}
+
+/* DETAIL */
+.detail{display:none;padding:0 14px 14px 46px}
+.detail.open{display:block}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.chip{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);padding:5px 10px;border:1px solid var(--border);border-radius:20px;cursor:pointer;background:var(--surface);transition:all .15s;-webkit-user-select:none;user-select:none}
+.chip input{display:none}
+.chip.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* TEXTAREA / INPUT */
+.fl{font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:500;letter-spacing:.03em;margin-top:8px}
+textarea,input[type=text],input[type=number]{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;color:var(--text);background:var(--bg);resize:none;font-family:inherit;line-height:1.5;outline:none;transition:border .15s}
+textarea:focus,input[type=text]:focus,input[type=number]:focus{border-color:var(--accent);background:var(--surface)}
+input[type=number]{width:80px;text-align:center}
+
+/* SELECT */
+select{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;color:var(--text);background:var(--surface);font-family:inherit;outline:none;-webkit-appearance:none;appearance:none}
+
+/* REWARD BANNER */
+.reward{background:var(--amber-bg);border:1px solid #E0C070;border-radius:var(--r-sm);padding:9px 12px;font-size:12px;color:var(--amber);margin-bottom:8px;line-height:1.5}
+
+/* STAFF SELECTOR */
+.staff-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.staff-btn{padding:8px 16px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;font-weight:500;color:var(--text2);background:var(--surface);cursor:pointer;transition:all .15s;-webkit-user-select:none;user-select:none}
+.staff-btn.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* LEADERBOARD */
+.lb-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:10px}
+.lb-hd{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.lb-title{font-size:14px;font-weight:600}
+.lb-month{font-size:11px;color:var(--text3)}
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);transition:background .1s}
+.lb-row:last-child{border-bottom:none}
+.lb-rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.rank-1{background:#FFD700;color:#5A4000}
+.rank-2{background:#C0C0C0;color:#3A3A3A}
+.rank-3{background:#CD7F32;color:#fff}
+.rank-n{background:var(--surface2);color:var(--text3)}
+.lb-name{font-size:14px;font-weight:600;color:var(--text);min-width:36px}
+.lb-bars{flex:1;display:flex;flex-direction:column;gap:3px}
+.lb-bar-row{display:flex;align-items:center;gap:6px}
+.lb-bar-lbl{font-size:10px;color:var(--text3);width:38px;flex-shrink:0}
+.lb-bar-track{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.lb-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.lb-score{font-size:16px;font-weight:700;color:var(--accent);min-width:36px;text-align:right}
+.lb-award{font-size:18px;min-width:24px;text-align:center}
+
+/* MEMBER CARD */
+.member-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:8px}
+.member-hd{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;-webkit-user-select:none;user-select:none}
+.member-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;color:#fff}
+.member-info{flex:1}
+.member-name{font-size:14px;font-weight:600}
+.member-stats{font-size:11px;color:var(--text3);margin-top:1px}
+.member-body{display:none;border-top:1px solid var(--border);padding:14px 16px}
+.member-body.open{display:block}
+
+/* BUYER CARD WIDGET */
+.bcard{background:var(--accent);border-radius:var(--r);padding:18px;margin-bottom:8px;color:#fff;position:relative;overflow:hidden}
+.bcard::before{content:'';position:absolute;right:-20px;top:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.06)}
+.bcard-brand{font-size:10px;letter-spacing:.15em;text-transform:uppercase;opacity:.6;margin-bottom:10px}
+.bcard-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.bcard-sub{font-size:12px;opacity:.7;margin-bottom:14px;line-height:1.4}
+.bcard-id{font-size:11px;opacity:.5;margin-bottom:6px}
+.bcard-uid{font-size:14px;font-weight:600;margin-bottom:16px;opacity:.9}
+.bcard-status-row{display:flex;gap:8px}
+.bcard-status{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,.3);opacity:.5}
+.bcard-status.active{opacity:1;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.6)}
+
+/* BOSS PANEL */
+.boss-award-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.award-btn{padding:8px 16px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;cursor:pointer;background:var(--surface);color:var(--text);transition:all .15s;display:flex;align-items:center;gap:5px}
+.award-btn:active{background:var(--amber-bg);border-color:var(--amber)}
+.award-feed{background:var(--gold-bg);border:1px solid #E8D070;border-radius:var(--r-sm);padding:10px 12px;margin-bottom:8px;font-size:13px;line-height:1.6}
+.award-feed-item{padding:8px 0;border-bottom:1px solid #E8D070;display:flex;align-items:flex-start;gap:8px}
+.award-feed-item:last-child{border-bottom:none}
+.award-icon{font-size:20px;flex-shrink:0}
+.award-text{flex:1;font-size:13px;color:var(--text)}
+.award-time{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* FEEDBACK LIST */
+.fb-item{background:var(--surface);border-radius:var(--r-sm);border:1px solid var(--border);padding:12px 14px;margin-bottom:6px}
+.fb-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;margin-bottom:6px}
+.fb-tag.fix{background:var(--red-bg);color:var(--red)}
+.fb-tag.idea{background:var(--blue-bg);color:var(--blue)}
+.fb-tag.share{background:var(--gold-bg);color:var(--gold)}
+.fb-content{font-size:13px;color:var(--text);line-height:1.5}
+.fb-meta{font-size:11px;color:var(--text3);margin-top:5px}
+
+/* BOTTOM BAR */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0));z-index:99}
+.btn-main{width:100%;padding:14px;background:var(--accent);color:#fff;font-size:15px;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.02em;transition:opacity .15s}
+.btn-main:active{opacity:.82}
+.btn-main.submitted{background:var(--green)}
+.btn-main.disabled{background:var(--border2);cursor:not-allowed}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:200;display:none;align-items:flex-end}
+.overlay.open{display:flex}
+.sheet{background:var(--surface);border-radius:var(--r) var(--r) 0 0;width:100%;max-height:88vh;display:flex;flex-direction:column;animation:up .28s cubic-bezier(.32,.72,0,1)}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-hd{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.sheet-title{font-size:16px;font-weight:600}
+.sheet-close{width:28px;height:28px;border-radius:50%;background:var(--surface2);border:none;font-size:16px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center}
+.sheet-body{flex:1;overflow-y:auto;padding:16px}
+.preview-box{background:var(--bg);border-radius:var(--r-sm);border:1px solid var(--border);padding:14px;font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;word-break:break-all}
+.sheet-actions{padding:10px 14px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0));flex-shrink:0;display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border)}
+.btn-act{width:100%;padding:13px;border-radius:var(--r);font-size:14px;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s}
+.btn-act:active{opacity:.8}
+.btn-share{background:var(--accent);color:#fff}
+.btn-copy{background:var(--surface2);color:var(--text);font-weight:500}
+
+/* PIN MODAL */
+.pin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:none;align-items:center;justify-content:center;padding:20px}
+.pin-overlay.open{display:flex}
+.pin-box{background:var(--surface);border-radius:var(--r);width:100%;max-width:320px;overflow:hidden}
+.pin-hd{padding:20px 18px 12px;text-align:center}
+.pin-title{font-size:17px;font-weight:700;margin-bottom:4px}
+.pin-sub{font-size:12px;color:var(--text3)}
+.pin-dots{display:flex;justify-content:center;gap:10px;padding:12px 0 16px}
+.pin-dot{width:12px;height:12px;border-radius:50%;background:var(--border2);transition:background .15s}
+.pin-dot.filled{background:var(--accent)}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--border)}
+.pin-key{padding:16px;font-size:20px;font-weight:500;border:none;background:none;cursor:pointer;border-right:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--text);transition:background .1s;-webkit-user-select:none;user-select:none}
+.pin-key:active{background:var(--surface2)}
+.pin-key:nth-child(3n){border-right:none}
+.pin-key:nth-last-child(-n+3){border-bottom:none}
+.pin-error{text-align:center;font-size:12px;color:var(--red);padding:6px 0 10px;min-height:28px}
+
+/* TOAST */
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(28,25,22,.88);color:#fff;padding:10px 18px;border-radius:var(--r);font-size:14px;z-index:400;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* SCORE CHIP */
+.score-chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--gold-bg);color:var(--gold)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-top">
+      <div>
+        <div class="brand">凡屋家具 · 客服打卡系统</div>
+        <div class="page-title">售前客服工作台</div>
+      </div>
+      <div class="hdr-right">
+        <div class="date-pill" id="hdr-date"></div>
+        <div class="online-pill" id="online-status">● 今日在线: 选择姓名</div>
+      </div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="sw('checkin',this)">📋 今日打卡</button>
+    <button class="tab" onclick="sw('buyercard',this)">🃏 买家权益卡</button>
+    <button class="tab" onclick="sw('leaderboard',this)">🏆 赛马榜</button>
+    <button class="tab" onclick="sw('feedback',this)">📡 前线反馈</button>
+    <button class="tab" onclick="sw('boss',this)">👑 老板台</button>
+    <button class="tab" onclick="sw('history',this)">📂 历史</button>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+<div class="content">
+
+<!-- ====== 今日打卡 ====== -->
+<div class="panel active" id="panel-checkin">
+
+  <div class="section">
+    <div class="sec-hd">我是谁 · 今日值班</div>
+    <div class="card" style="padding:14px">
+      <div class="fl" style="margin-top:0">选择你的名字</div>
+      <div class="staff-row" id="staff-selector">
+        <button class="staff-btn" onclick="selStaff('农农',this)">农农</button>
+        <button class="staff-btn" onclick="selStaff('菜菜',this)">菜菜</button>
+        <button class="staff-btn" onclick="selStaff('小可',this)">小可</button>
+        <button class="staff-btn" onclick="selStaff('叶子',this)">叶子</button>
+      </div>
+      <div class="fl">今日值班店铺</div>
+      <div class="chips" id="shop-chips">
+        <label class="chip" onclick="selChip(this,'shop','凡屋')"><input type="radio" name="shop"><span>凡屋店铺</span></label>
+        <label class="chip" onclick="selChip(this,'shop','锐设计')"><input type="radio" name="shop"><span>锐设计店铺</span></label>
+        <label class="chip" onclick="selChip(this,'shop','双店')"><input type="radio" name="shop"><span>两店都有</span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hd">开班检查 · 09:00</div>
+    <div class="card">
+      <div class="item" onclick="togItem(this,'open_tool')">
+        <div class="cb"></div>
+        <div class="item-body"><div class="item-lbl">工具就绪确认</div><div class="item-sub">千牛已登录、赤兔插件正常、话术文档打开</div></div>
+        <div class="item-rt"><span class="badge bb">开班</span></div>
+      </div>
+      <div class="item" onclick="togItem(this,'open_activity')">
+        <div class="cb"></div>
+        <div class="item-body"><div class="item-lbl">今日活动 / 促销确认</div><div class="item-sub">了解今日活动规则，确认可以准确告知买家</div></div>
+        <div class="item-rt"><span class="badge bb">开班</span></div>
+      </div>
+      <div class="item" onclick="togItem(this,'open_sku')">
+        <div class="cb"></div>
+        <div class="item-body"><div class="item-lbl">库存 / 缺货 / 排期确认</div><div class="item-sub">了解今日哪些SKU缺货或发货延迟，避免误导买家</div></div>
+        <div class="item-rt"><span class="badge bb">开班</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hd">全天循环 · 核心接待动作</div>
+    <div class="reward">💡 这几项是今天接待质量的核心，每完成一项都在为你的积分加分</div>
+    <div class="card">
+      <div class="item" onclick="togItemScore(this,'action_dig',2)">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-lbl">主动挖掘真实需求</div>
+          <div class="item-sub">不只回答问题，而是搞清楚买家真正要什么（尺寸/风格/预算/场景）</div>
+        </div>
+        <div class="item-rt"><span class="badge bg">+2分</span></div>
+      </div>
+      <div class="item" onclick="togItemScore(this,'action_bundle',3)">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-lbl">主动推荐联带商品</div>
+          <div class="item-sub">买桌推椅、买床推床头柜，同时告知集卡政策</div>
+        </div>
+        <div class="item-rt"><span class="badge bg">+3分</span></div>
+      </div>
+      <div class="item" onclick="togItemScore(this,'action_alt',2)">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-lbl">为买家提供替代方案</div>
+          <div class="item-sub">买家问的款没有 → 主动找相近款推荐，不放弃任何一个访客</div>
+        </div>
+        <div class="item-rt"><span class="badge bg">+2分</span></div>
+      </div>
+      <div class="item" onclick="togItemScore(this,'action_card',2)">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-lbl">向买家介绍集卡权益</div>
+          <div class="item-sub">告知买家凡屋8张权益卡，引导激活第一张</div>
+        </div>
+        <div class="item-rt"><span class="badge bg">+2分</span></div>
+      </div>
+      <div class="item" onclick="togItemX(this,'det-bargain','action_bargain')">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-lbl">今日遇到砍价场景</div>
+          <div class="item-sub">记录砍价情况 → 帮助老板建立政策弹药库</div>
+        </div>
+        <div class="item-rt"><span class="badge ba">记录</span></div>
+      </div>
+      <div class="detail" id="det-bargain">
+        <div class="fl">砍价场景记录</div>
+        <textarea id="ta-bargain" placeholder="例：买家要求打9折，理由是同类产品更便宜。最终成交 / 流失。" rows="3" oninput="saveF('bargain',this.value)"></textarea>
+        <div class="chips" style="margin-top:8px">
+          <label class="chip" onclick="selChip(this,'bargain_result','成交')"><input type="radio" name="bargain_result"><span>✅ 最终成交</span></label>
+          <label class="chip" onclick="selChip(this,'bargain_result','流失')"><input type="radio" name="bargain_result"><span>❌ 流失</span></label>
+          <label class="chip" onclick="selChip(this,'bargain_result','跟进中')"><input type="radio" name="bargain_result"><span>⏳ 跟进中</span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hd">今日亮点 · 积分来源</div>
+    <div class="card">
+      <div class="item" onclick="togItemX(this,'det-hardwin','star_hardwin')">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-lbl">今日搞定了一个难单 🎯</div>
+          <div class="item-sub">犹豫很久的、砍价很狠的、问题很多的，最终成交了</div>
+        </div>
+        <div class="item-rt"><span class="badge bgold">+5分</span></div>
+      </div>
+      <div class="detail" id="det-hardwin">
+        <div class="fl">这单难在哪，你怎么搞定的</div>
+        <textarea id="ta-hardwin" placeholder="例：买家纠结了3天，一直问尺寸和颜色，我主动发了实拍视频和尺寸对比图，最终成交了餐桌+4把椅子" rows="3" oninput="saveF('hardwin',this.value)"></textarea>
+      </div>
+      <div class="item" onclick="togItemX(this,'det-insight','star_insight')">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-lbl">今日有个灵机一动 💡</div>
+          <div class="item-sub">用了一个新话术、新方法，感觉特别好用</div>
+        </div>
+        <div class="item-rt"><span class="badge bgold">+4分</span></div>
+      </div>
+      <div class="detail" id="det-insight">
+        <div class="fl">分享你的灵机一动（其他人也能学到）</div>
+        <textarea id="ta-insight" placeholder="例：发现买家犹豫时，先问「您家装修风格是什么」比直接推产品效果好很多" rows="3" oninput="saveF('insight',this.value)"></textarea>
+      </div>
+      <div class="item" onclick="togItemX(this,'det-share','star_share')">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-lbl">今日主动分享心得 📢</div>
+          <div class="item-sub">在工作群分享了接待经验、买家反馈或有用信息</div>
+        </div>
+        <div class="item-rt"><span class="badge bgold">+3分</span></div>
+      </div>
+      <div class="detail" id="det-share">
+        <div class="fl">分享内容简述</div>
+        <textarea id="ta-share" placeholder="简单描述你分享了什么" rows="2" oninput="saveF('share',this.value)"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hd">前线反馈 · 今日上报</div>
+    <div class="reward">📡 这里的信息直接传给老板决策，每条有效反馈 <strong>+3分</strong></div>
+    <div class="card">
+      <div class="item" onclick="togItemX(this,'det-fix','fb_fix')">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-lbl">🔧 发现经营缺陷（堵漏洞）</div>
+          <div class="item-sub">规格缺失 / 邮费问题 / SKU排期 / 流程不顺</div>
+        </div>
+        <div class="item-rt"><span class="badge br">+3分</span></div>
+      </div>
+      <div class="detail" id="det-fix">
+        <textarea id="ta-fix" placeholder="例：有3个买家问到180cm宽的餐桌，目前没有这个尺寸，建议补充&#10;例：华南地区邮费偏高，有买家因为运费放弃下单" rows="4" oninput="saveF('fix',this.value)"></textarea>
+      </div>
+      <div class="item" onclick="togItemX(this,'det-idea','fb_idea')">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-lbl">💡 买家需求灵感（找方向）</div>
+          <div class="item-sub">买家说想要什么 / 问到我们没有的东西</div>
+        </div>
+        <div class="item-rt"><span class="badge br">+3分</span></div>
+      </div>
+      <div class="detail" id="det-idea">
+        <textarea id="ta-idea" placeholder="例：今天有2个买家问有没有折叠餐桌，适合小户型&#10;例：买家说想要可以调节高度的书桌，市面上的都太贵了" rows="4" oninput="saveF('idea',this.value)"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hd">今日数据填报（来自赤兔插件）</div>
+    <div class="card" style="padding:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div class="fl" style="margin-top:0">咨询人数</div>
+          <input type="number" id="stat-consult" placeholder="0" min="0" oninput="saveF('stat_consult',this.value)">
+        </div>
+        <div>
+          <div class="fl" style="margin-top:0">成交单数</div>
+          <input type="number" id="stat-convert" placeholder="0" min="0" oninput="saveF('stat_convert',this.value)">
+        </div>
+        <div>
+          <div class="fl" style="margin-top:0">答问比 (%)</div>
+          <input type="number" id="stat-answer" placeholder="0" min="0" max="100" oninput="saveF('stat_answer',this.value)">
+        </div>
+        <div>
+          <div class="fl" style="margin-top:0">响应速度 (秒)</div>
+          <input type="number" id="stat-response" placeholder="0" min="0" oninput="saveF('stat_response',this.value)">
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="fl" style="margin-top:0">联带成交单数</div>
+        <input type="number" id="stat-bundle" placeholder="0" min="0" oninput="saveF('stat_bundle',this.value)">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hd">下班收尾</div>
+    <div class="card">
+      <div class="item" onclick="togItem(this,'close_handover')">
+        <div class="cb"></div>
+        <div class="item-body"><div class="item-lbl">交班信息已同步</div><div class="item-sub">跟进中的买家、待确认的问题已告知接班同事</div></div>
+        <div class="item-rt"><span class="badge bx">收尾</span></div>
+      </div>
+      <div class="item" onclick="togItem(this,'close_pending')">
+        <div class="cb"></div>
+        <div class="item-body"><div class="item-lbl">待跟进买家已标记</div><div class="item-sub">在千牛中标注好需要跟进的买家</div></div>
+        <div class="item-rt"><span class="badge bx">收尾</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /checkin -->
+
+<!-- ====== 买家权益卡 ====== -->
+<div class="panel" id="panel-buyercard">
+  <div class="reward">📸 填写买家ID后，点「生成卡片」→ 截图发给买家，让他们感受到专属服务感</div>
+
+  <div class="section">
+    <div class="sec-hd">填写买家信息</div>
+    <div class="card" style="padding:14px">
+      <div class="fl" style="margin-top:0">买家淘宝ID / 昵称</div>
+      <input type="text" id="buyer-id" placeholder="例：淘宝昵称 or 旺旺ID" oninput="updateBuyerCard()">
+      <div class="fl">选择权益卡</div>
+      <div id="card-selector" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hd">卡片预览（截图发给买家）</div>
+    <div id="buyer-card-preview"></div>
+    <button class="btn-main" style="margin-top:4px" onclick="saveBuyerCardRecord()">✅ 确认登记此权益卡</button>
+  </div>
+
+  <div class="section">
+    <div class="sec-hd">已登记记录</div>
+    <div id="buyer-card-records"></div>
+  </div>
+</div>
+
+<!-- ====== 赛马榜 ====== -->
+<div class="panel" id="panel-leaderboard">
+  <div class="lb-card">
+    <div class="lb-hd">
+      <div class="lb-title">🏆 本月积分榜</div>
+      <div class="lb-month" id="lb-month"></div>
+    </div>
+    <div id="lb-rows"></div>
+  </div>
+
+  <div class="lb-card">
+    <div class="lb-hd"><div class="lb-title">📊 本月数据榜</div></div>
+    <div id="data-rows"></div>
+  </div>
+
+  <div class="section" style="margin-top:16px">
+    <div class="sec-hd">积分规则说明</div>
+    <div class="card" style="padding:14px">
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text2)">
+        <div>🎯 <strong style="color:var(--text)">搞定难单</strong> +5分/单</div>
+        <div>💡 <strong style="color:var(--text)">灵机一动分享</strong> +4分/次</div>
+        <div>🤝 <strong style="color:var(--text)">主动推荐联带</strong> +3分/天（打卡）</div>
+        <div>📢 <strong style="color:var(--text)">主动分享心得</strong> +3分/次</div>
+        <div>📡 <strong style="color:var(--text)">有效前线反馈</strong> +3分/条</div>
+        <div>🔍 <strong style="color:var(--text)">主动挖掘需求</strong> +2分/天（打卡）</div>
+        <div>🔄 <strong style="color:var(--text)">提供替代方案</strong> +2分/天（打卡）</div>
+        <div>🃏 <strong style="color:var(--text)">推荐集卡政策</strong> +2分/天（打卡）</div>
+        <div>🧋 <strong style="color:var(--text)">老板奶茶奖励</strong> +10分/次</div>
+        <div>🎁 <strong style="color:var(--text)">老板小礼物奖励</strong> +20分/次</div>
+        <div>⭐ <strong style="color:var(--text)">老板看见卡</strong> +15分/次</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 前线反馈 ====== -->
+<div class="panel" id="panel-feedback">
+  <div class="section">
+    <div class="sec-hd">🔧 堵漏洞 · 经营缺陷反馈</div>
+    <div id="fb-fix-list"><div style="text-align:center;padding:30px;color:var(--text3);font-size:13px">暂无记录</div></div>
+  </div>
+  <div class="section">
+    <div class="sec-hd">💡 找方向 · 用户需求灵感</div>
+    <div id="fb-idea-list"><div style="text-align:center;padding:30px;color:var(--text3);font-size:13px">暂无记录</div></div>
+  </div>
+  <div class="section">
+    <div class="sec-hd">🌟 亮点案例 · 心得分享</div>
+    <div id="fb-share-list"><div style="text-align:center;padding:30px;color:var(--text3);font-size:13px">暂无记录</div></div>
+  </div>
+</div>
+
+<!-- ====== 老板台 ====== -->
+<div class="panel" id="panel-boss">
+  <div id="boss-locked">
+    <div style="text-align:center;padding:60px 20px 20px">
+      <div style="font-size:48px;margin-bottom:16px">👑</div>
+      <div style="font-size:18px;font-weight:600;margin-bottom:8px">老板专属</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:24px">请输入6位密码进入管理台</div>
+      <button class="btn-main" style="max-width:200px;margin:0 auto" onclick="openPin()">输入密码</button>
+    </div>
+  </div>
+  <div id="boss-content" style="display:none">
+
+    <div class="section">
+      <div class="sec-hd">今日汇报总览</div>
+      <div id="boss-reports"></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-hd">🎁 发放奖励（全员可见）</div>
+      <div class="card" style="padding:14px">
+        <div class="fl" style="margin-top:0">奖励给谁</div>
+        <div class="staff-row" id="award-target">
+          <button class="staff-btn" onclick="selAwardTarget('农农',this)">农农</button>
+          <button class="staff-btn" onclick="selAwardTarget('菜菜',this)">菜菜</button>
+          <button class="staff-btn" onclick="selAwardTarget('小可',this)">小可</button>
+          <button class="staff-btn" onclick="selAwardTarget('叶子',this)">叶子</button>
+        </div>
+        <div class="fl">奖励类型</div>
+        <div class="boss-award-row">
+          <button class="award-btn" onclick="giveAward('奶茶','🧋',10)">🧋 奶茶 +10分</button>
+          <button class="award-btn" onclick="giveAward('小礼物','🎁',20)">🎁 小礼物 +20分</button>
+          <button class="award-btn" onclick="giveAward('老板看见','⭐',15)">⭐ 老板看见 +15分</button>
+        </div>
+        <div class="fl">附言（可选）</div>
+        <textarea id="award-note" placeholder="例：今天这单处理得很漂亮，买家反馈很好 👍" rows="2"></textarea>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-hd">🏅 奖励动态（全员可见）</div>
+      <div id="award-feed-list"><div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">暂无奖励记录</div></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-hd">老板点评</div>
+      <div class="card" style="padding:14px">
+        <textarea id="boss-comment" placeholder="今日整体点评，全员可见…" rows="3"></textarea>
+        <button class="btn-main" style="margin-top:10px" onclick="saveBossComment()">发布点评</button>
+      </div>
+      <div id="boss-comment-list" style="margin-top:8px"></div>
+    </div>
+
+    <div style="margin-top:16px;padding-bottom:20px">
+      <button class="btn-act btn-copy" style="border-radius:var(--r);padding:12px;width:100%" onclick="lockBoss()">退出老板模式</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 历史记录 ====== -->
+<div class="panel" id="panel-history">
+  <div class="section">
+    <div class="sec-hd">按客服筛选</div>
+    <div class="staff-row">
+      <button class="staff-btn sel" onclick="filterHistory('全部',this)">全部</button>
+      <button class="staff-btn" onclick="filterHistory('农农',this)">农农</button>
+      <button class="staff-btn" onclick="filterHistory('菜菜',this)">菜菜</button>
+      <button class="staff-btn" onclick="filterHistory('小可',this)">小可</button>
+      <button class="staff-btn" onclick="filterHistory('叶子',this)">叶子</button>
+    </div>
+  </div>
+  <div id="hist-list"></div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /body -->
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar" id="bar-checkin">
+  <button class="btn-main" id="submit-btn" onclick="openPreview()">
+    <span>📤</span><span id="submit-label">生成今日汇报 · 发送给老板</span>
+  </button>
+</div>
+
+<!-- PREVIEW MODAL -->
+<div class="overlay" id="modal" onclick="maybeClose(event)">
+  <div class="sheet">
+    <div class="sheet-hd">
+      <span class="sheet-title">今日汇报预览</span>
+      <button class="sheet-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="preview-box" id="preview-txt"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-act btn-share" onclick="doSubmitShare()">📤 提交记录 · 分享给老板</button>
+      <button class="btn-act btn-copy" onclick="doSubmitCopy()">📋 提交记录 · 复制文本</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN MODAL -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-box">
+    <div class="pin-hd">
+      <div class="pin-title">👑 老板专属</div>
+      <div class="pin-sub">请输入6位数字密码</div>
+    </div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <div class="pin-keypad">
+      <button class="pin-key" onclick="pinInput('1')">1</button>
+      <button class="pin-key" onclick="pinInput('2')">2</button>
+      <button class="pin-key" onclick="pinInput('3')">3</button>
+      <button class="pin-key" onclick="pinInput('4')">4</button>
+      <button class="pin-key" onclick="pinInput('5')">5</button>
+      <button class="pin-key" onclick="pinInput('6')">6</button>
+      <button class="pin-key" onclick="pinInput('7')">7</button>
+      <button class="pin-key" onclick="pinInput('8')">8</button>
+      <button class="pin-key" onclick="pinInput('9')">9</button>
+      <button class="pin-key" onclick="pinClear()" style="font-size:14px">清除</button>
+      <button class="pin-key" onclick="pinInput('0')">0</button>
+      <button class="pin-key" onclick="pinDel()" style="font-size:18px">⌫</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════ CONSTANTS ═══════════════
+const BOSS_PIN = '888888'; // 默认密码，可在此修改
+const STAFF = ['农农','菜菜','小可','叶子'];
+const COLORS = {农农:'#8B5E3C',菜菜:'#3B6B8B',小可:'#6B3B8B',叶子:'#3B7B4B'};
+const TODAY = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;})();
+const MONTH_KEY = TODAY.slice(0,7);
+const NOW = new Date();
+const DAYS = ['周日','周一','周二','周三','周四','周五','周六'];
+
+// ═══════════════ STORAGE ═══════════════
+const store = (k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const load = (k,d)=>{try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):d}catch(e){return d}};
+const getDraft = ()=>load('kf_draft_'+TODAY,{});
+const saveDraft = d=>store('kf_draft_'+TODAY,d);
+const getRecords = ()=>load('kf_records_'+MONTH_KEY,[]);
+const saveRecords = r=>store('kf_records_'+MONTH_KEY,r);
+const getScores = ()=>load('kf_scores_'+MONTH_KEY,{农农:0,菜菜:0,小可:0,叶子:0});
+const saveScores = s=>store('kf_scores_'+MONTH_KEY,s);
+const getStats = ()=>load('kf_stats_'+MONTH_KEY,{农农:{consult:0,convert:0,bundle:0,days:0},菜菜:{consult:0,convert:0,bundle:0,days:0},小可:{consult:0,convert:0,bundle:0,days:0},叶子:{consult:0,convert:0,bundle:0,days:0}});
+const saveStats = s=>store('kf_stats_'+MONTH_KEY,s);
+const getAwards = ()=>load('kf_awards_'+MONTH_KEY,[]);
+const saveAwards = a=>store('kf_awards_'+MONTH_KEY,a);
+const getComments = ()=>load('kf_comments_'+MONTH_KEY,[]);
+const saveComments = c=>store('kf_comments_'+MONTH_KEY,c);
+const getBuyerCards = ()=>load('kf_buyercards_'+MONTH_KEY,[]);
+const saveBuyerCards = c=>store('kf_buyercards_'+MONTH_KEY,c);
+const getFeedback = ()=>load('kf_feedback_'+MONTH_KEY,[]);
+const saveFeedback = f=>store('kf_feedback_'+MONTH_KEY,f);
+
+// ═══════════════ STATE ═══════════════
+let currentStaff = '';
+let currentAwardTarget = '';
+let selectedCard = null;
+let pinBuffer = '';
+let bossUnlocked = false;
+let histFilter = '全部';
+
+// ═══════════════ INIT ═══════════════
+document.getElementById('hdr-date').textContent = `${NOW.getMonth()+1}月${NOW.getDate()}日 ${DAYS[NOW.getDay()]}`;
+document.getElementById('lb-month').textContent = `${NOW.getFullYear()}年${NOW.getMonth()+1}月`;
+buildCardSelector();
+restoreDraft();
+renderAwardFeed();
+renderBossComments();
+renderBuyerCardRecords();
+
+function restoreDraft() {
+  const d = getDraft();
+  if (d.staff) { currentStaff = d.staff; document.querySelectorAll('#staff-selector .staff-btn').forEach(b=>{if(b.textContent===d.staff)b.classList.add('sel')}); updateOnline(); }
+  if (d.shop) { document.querySelectorAll('#shop-chips .chip').forEach(c=>{if(c.querySelector('input').value===d.shop||c.textContent.trim().includes(d.shop))c.classList.add('sel')}); }
+  const checks = d.checks||{};
+  Object.keys(checks).forEach(k=>{
+    if(checks[k]){
+      const el = document.querySelector(`[data-key="${k}"]`);
+      if(el){el.querySelector('.cb').classList.add('on');el.classList.add('done');const det=el.getAttribute('data-det');if(det){const d2=document.getElementById(det);if(d2)d2.classList.add('open');}}
+    }
+  });
+  const taMap = {bargain:'ta-bargain',hardwin:'ta-hardwin',insight:'ta-insight',share:'ta-share',fix:'ta-fix',idea:'ta-idea'};
+  Object.keys(taMap).forEach(k=>{if(d[k]){const el=document.getElementById(taMap[k]);if(el)el.value=d[k];}});
+  const statMap = {stat_consult:'stat-consult',stat_convert:'stat-convert',stat_answer:'stat-answer',stat_response:'stat-response',stat_bundle:'stat-bundle'};
+  Object.keys(statMap).forEach(k=>{if(d[k]){const el=document.getElementById(statMap[k]);if(el)el.value=d[k];}});
+  if(d.submitted){const btn=document.getElementById('submit-btn');btn.classList.add('submitted');document.getElementById('submit-label').textContent='✅ 今日已提交 · 重新发送';}
+}
+
+// ═══════════════ STAFF SELECT ═══════════════
+function selStaff(name, btn) {
+  document.querySelectorAll('#staff-selector .staff-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  currentStaff = name;
+  const d = getDraft(); d.staff = name; saveDraft(d);
+  updateOnline();
+}
+function updateOnline() {
+  const el = document.getElementById('online-status');
+  if(currentStaff) el.textContent = `● 在线: ${currentStaff}`;
+  else el.textContent = '● 今日在线: 选择姓名';
+}
+
+// ═══════════════ TAB ═══════════════
+function sw(name, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('bar-checkin').style.display = name==='checkin'?'':'none';
+  if(name==='leaderboard') renderLeaderboard();
+  if(name==='feedback') renderFeedback();
+  if(name==='boss') renderBossPanel();
+  if(name==='history') renderHistory();
+  if(name==='buyercard') renderBuyerCardRecords();
+}
+
+// ═══════════════ ITEM TOGGLE ═══════════════
+function togItem(el, key) {
+  const cb = el.querySelector('.cb');
+  const on = cb.classList.toggle('on');
+  el.classList.toggle('done', on);
+  el.setAttribute('data-key', key);
+  const d = getDraft(); if(!d.checks)d.checks={}; d.checks[key]=on; saveDraft(d);
+}
+function togItemX(el, detId, key) {
+  const cb = el.querySelector('.cb');
+  const on = cb.classList.toggle('on');
+  el.classList.toggle('done', on);
+  el.setAttribute('data-key', key);
+  el.setAttribute('data-det', detId);
+  const det = document.getElementById(detId); if(det) det.classList.toggle('open',on);
+  const d = getDraft(); if(!d.checks)d.checks={}; d.checks[key]=on; saveDraft(d);
+}
+function togItemScore(el, key, pts) {
+  const cb = el.querySelector('.cb');
+  const on = cb.classList.toggle('on');
+  el.classList.toggle('done', on);
+  el.setAttribute('data-key', key);
+  const d = getDraft(); if(!d.checks)d.checks={}; d.checks[key]=on; saveDraft(d);
+}
+function selChip(el, key, val) {
+  const name = el.querySelector('input')?.name;
+  if(name) document.querySelectorAll(`input[name="${name}"]`).forEach(r=>r.closest('.chip').classList.remove('sel'));
+  el.classList.add('sel');
+  const inp = el.querySelector('input'); if(inp){inp.checked=true;}
+  const d = getDraft(); d[key]=val; saveDraft(d);
+}
+function saveF(key, val) { const d=getDraft(); d[key]=val; saveDraft(d); }
+
+// ═══════════════ SCORE CALC ═══════════════
+function calcTodayScore(draft) {
+  const checks = draft.checks||{};
+  let score = 0;
+  if(checks.action_dig) score+=2;
+  if(checks.action_bundle) score+=3;
+  if(checks.action_alt) score+=2;
+  if(checks.action_card) score+=2;
+  if(checks.star_hardwin && draft.hardwin) score+=5;
+  if(checks.star_insight && draft.insight) score+=4;
+  if(checks.star_share && draft.share) score+=3;
+  if(checks.fb_fix && draft.fix) score+=3;
+  if(checks.fb_idea && draft.idea) score+=3;
+  return score;
+}
+
+// ═══════════════ BUILD REPORT ═══════════════
+function buildReport() {
+  const d = getDraft();
+  if(!currentStaff && !d.staff){toast('请先选择你的名字');return null;}
+  const staff = currentStaff || d.staff;
+  const score = calcTodayScore(d);
+  const dateStr = `${NOW.getFullYear()}年${NOW.getMonth()+1}月${NOW.getDate()}日 ${DAYS[NOW.getDay()]}`;
+  const consult = d.stat_consult||0;
+  const convert = d.stat_convert||0;
+  const cvr = consult>0?((convert/consult)*100).toFixed(1)+'%':'—';
+  let txt = `📋 凡屋客服日报 · ${staff}\n`;
+  txt += `━━━━━━━━━━━━━━━━\n`;
+  txt += `📅 ${dateStr}\n`;
+  txt += `💫 今日积分：+${score}分\n`;
+  txt += `━━━━━━━━━━━━━━━━\n\n`;
+  txt += `【今日数据】\n`;
+  txt += `咨询人数：${consult} | 成交：${convert} | 转化率：${cvr}\n`;
+  txt += `联带成交：${d.stat_bundle||0}单 | 答问比：${d.stat_answer||'—'}% | 响应：${d.stat_response||'—'}秒\n\n`;
+  const checks = d.checks||{};
+  const actions = [];
+  if(checks.action_dig) actions.push('主动挖掘需求 ✅');
+  if(checks.action_bundle) actions.push('推荐联带商品 ✅');
+  if(checks.action_alt) actions.push('提供替代方案 ✅');
+  if(checks.action_card) actions.push('介绍集卡权益 ✅');
+  if(actions.length) txt += `【今日核心动作】\n${actions.join(' · ')}\n\n`;
+  if(checks.star_hardwin && d.hardwin) txt += `【搞定难单 🎯】\n${d.hardwin}\n\n`;
+  if(checks.star_insight && d.insight) txt += `【灵机一动 💡】\n${d.insight}\n\n`;
+  if(checks.star_share && d.share) txt += `【主动分享 📢】\n${d.share}\n\n`;
+  if(checks.fb_fix && d.fix) txt += `【经营缺陷反馈 🔧】\n${d.fix}\n\n`;
+  if(checks.fb_idea && d.idea) txt += `【用户需求灵感 💡】\n${d.idea}\n\n`;
+  if(checks.action_bargain && d.bargain) txt += `【砍价场景记录】\n${d.bargain}\n结果：${d.bargain_result||'未记录'}\n\n`;
+  txt += `━━━━━━━━━━━━━━━━\n凡屋家具 · 售前客服`;
+  return {text:txt, staff, score, consult:+consult, convert:+convert, bundle:+(d.stat_bundle||0), fix:d.fix, idea:d.idea, hardwin:d.hardwin, insight:d.insight};
+}
+
+// ═══════════════ SUBMIT ═══════════════
+let _rpt = null;
+function openPreview() {
+  const r = buildReport(); if(!r) return;
+  _rpt = r;
+  document.getElementById('preview-txt').textContent = r.text;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+function maybeClose(e){if(e.target===document.getElementById('modal'))closeModal();}
+
+function saveRecord(rpt) {
+  // Records
+  const records = getRecords();
+  const idx = records.findIndex(r=>r.date===TODAY&&r.staff===rpt.staff);
+  const rec = {date:TODAY,staff:rpt.staff,score:rpt.score,consult:rpt.consult,convert:rpt.convert,bundle:rpt.bundle,text:rpt.text,ts:Date.now()};
+  if(idx>=0)records[idx]=rec; else records.push(rec);
+  records.sort((a,b)=>b.ts-a.ts);
+  saveRecords(records);
+
+  // Scores
+  const scores = getScores();
+  const existingScore = records.filter(r=>r.staff===rpt.staff&&r.date===TODAY).length>1 ? (records.find(r=>r.staff===rpt.staff&&r.date===TODAY&&r.ts!==rec.ts)||{score:0}).score : 0;
+  scores[rpt.staff] = (scores[rpt.staff]||0) - existingScore + rpt.score;
+  if(scores[rpt.staff]<0)scores[rpt.staff]=0;
+  saveScores(scores);
+
+  // Stats
+  const stats = getStats();
+  if(!stats[rpt.staff])stats[rpt.staff]={consult:0,convert:0,bundle:0,days:0};
+  stats[rpt.staff].consult += rpt.consult;
+  stats[rpt.staff].convert += rpt.convert;
+  stats[rpt.staff].bundle += rpt.bundle;
+  stats[rpt.staff].days = (stats[rpt.staff].days||0)+1;
+  saveStats(stats);
+
+  // Feedback
+  if(rpt.fix){const fb=getFeedback();fb.unshift({type:'fix',staff:rpt.staff,content:rpt.fix,date:TODAY});saveFeedback(fb);}
+  if(rpt.idea){const fb=getFeedback();fb.unshift({type:'idea',staff:rpt.staff,content:rpt.idea,date:TODAY});saveFeedback(fb);}
+  if(rpt.hardwin){const fb=getFeedback();fb.unshift({type:'share',staff:rpt.staff,content:'【难单】'+rpt.hardwin,date:TODAY});saveFeedback(fb);}
+  if(rpt.insight){const fb=getFeedback();fb.unshift({type:'share',staff:rpt.staff,content:'【灵感】'+rpt.insight,date:TODAY});saveFeedback(fb);}
+
+  // Mark submitted
+  const d=getDraft();d.submitted=true;saveDraft(d);
+  const btn=document.getElementById('submit-btn');btn.classList.add('submitted');
+  document.getElementById('submit-label').textContent='✅ 今日已提交 · 重新发送';
+}
+
+async function doSubmitShare() {
+  if(!_rpt)return;
+  saveRecord(_rpt); closeModal();
+  if(navigator.share){try{await navigator.share({title:'凡屋客服日报',text:_rpt.text});return;}catch(e){}}
+  await copyTxt(_rpt.text); toast('已复制 ✅ 粘贴到微信发给老板');
+}
+async function doSubmitCopy() {
+  if(!_rpt)return;
+  saveRecord(_rpt); closeModal();
+  await copyTxt(_rpt.text); toast('已复制 ✅ 粘贴到微信发给老板');
+}
+async function copyTxt(t){try{await navigator.clipboard.writeText(t);}catch(e){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}}
+
+// ═══════════════ BUYER CARDS ═══════════════
+const BUYER_CARDS = [
+  {id:'c1',icon:'🪵',name:'认识凡屋',sub:'初次购买专属欢迎礼遇',trigger:'首次下单成交',benefit:'专属1对1服务 + 《凡屋选购指南》'},
+  {id:'c2',icon:'🌿',name:'先锋尝鲜',sub:'新品体验限时特权',trigger:'新品上架30天内下单',benefit:'新品首发价 + 优先测评资格',limited:true},
+  {id:'c3',icon:'🪑',name:'我家我做主',sub:'空间搭配服务卡',trigger:'单次联带购买2件及以上',benefit:'免费空间搭配建议（图文方案）'},
+  {id:'c4',icon:'📦',name:'老朋友',sub:'回头客专属权益',trigger:'第二次成交',benefit:'终身优先发货 + 专属复购折扣'},
+  {id:'c5',icon:'📣',name:'带我来的',sub:'推荐官专属返利',trigger:'推荐朋友成交1单',benefit:'现金返利或等值购物券'},
+  {id:'c6',icon:'🛠',name:'只为你造',sub:'定制服务优先通道',trigger:'累计购买2件或指定金额',benefit:'尺寸/颜色定制咨询优先通道'},
+  {id:'c7',icon:'⭐',name:'凡屋真爱粉',sub:'VIP铁杆粉会员',trigger:'累计成交3单及以上',benefit:'VIP标识 + 新品内测 + 年度专属福利'},
+  {id:'c8',icon:'📸',name:'住进凡屋',sub:'买家秀晒图卡',trigger:'发布真实买家秀（图片/视频）',benefit:'下次购买抵扣券 + 上墙展示'},
+];
+
+function buildCardSelector() {
+  const c = document.getElementById('card-selector');
+  BUYER_CARDS.forEach(card=>{
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:all .15s;-webkit-user-select:none;user-select:none;background:var(--surface)';
+    div.innerHTML=`<span style="font-size:20px">${card.icon}</span><div style="flex:1"><div style="font-size:13px;font-weight:600">${card.name} ${card.limited?'<span style="font-size:10px;background:var(--red-bg);color:var(--red);padding:1px 6px;border-radius:8px;margin-left:4px">限时</span>':''}</div><div style="font-size:11px;color:var(--text3);margin-top:1px">${card.trigger}</div></div><div id="cs-check-${card.id}" style="width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border2);flex-shrink:0"></div>`;
+    div.onclick=()=>{ selectedCard=card; document.querySelectorAll('#card-selector > div').forEach(d=>{d.style.borderColor='var(--border)';d.style.background='var(--surface)';d.querySelector('[id^="cs-check"]').style.background='';d.querySelector('[id^="cs-check"]').style.borderColor='var(--border2)';}); div.style.borderColor='var(--accent)';div.style.background='var(--bg)';div.querySelector(`#cs-check-${card.id}`).style.background='var(--accent)';div.querySelector(`#cs-check-${card.id}`).style.borderColor='var(--accent)'; updateBuyerCard(); };
+    c.appendChild(div);
+  });
+}
+
+function updateBuyerCard() {
+  const uid = document.getElementById('buyer-id').value.trim();
+  const prev = document.getElementById('buyer-card-preview');
+  if(!selectedCard){prev.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">请先选择一张权益卡</div>';return;}
+  prev.innerHTML=`<div class="bcard">
+    <div class="bcard-brand">FANWU · 凡屋家具 买家权益卡</div>
+    <div class="bcard-title">${selectedCard.icon} ${selectedCard.name}</div>
+    <div class="bcard-sub">${selectedCard.sub}</div>
+    <div class="bcard-id">买家账号</div>
+    <div class="bcard-uid">${uid||'— 请填写买家ID —'}</div>
+    <div class="bcard-status-row">
+      <div class="bcard-status active">✅ 已登记</div>
+      <div class="bcard-status">激活待确认</div>
+    </div>
+  </div>
+  <div style="background:var(--surface);border-radius:var(--r-sm);border:1px solid var(--border);padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.6">
+    <div style="font-weight:600;color:var(--text);margin-bottom:4px">权益详情</div>
+    <div>触发条件：${selectedCard.trigger}</div>
+    <div>权益内容：${selectedCard.benefit}</div>
+  </div>`;
+}
+
+function saveBuyerCardRecord() {
+  const uid=document.getElementById('buyer-id').value.trim();
+  if(!uid){toast('请填写买家ID');return;}
+  if(!selectedCard){toast('请选择权益卡');return;}
+  if(!currentStaff){toast('请先选择你的名字');return;}
+  const cards=getBuyerCards();
+  cards.unshift({uid,card:selectedCard,staff:currentStaff,date:TODAY,ts:Date.now()});
+  saveBuyerCards(cards);
+  renderBuyerCardRecords();
+  toast('权益卡已登记 ✅ 截图发给买家');
+}
+
+function renderBuyerCardRecords() {
+  const c=document.getElementById('buyer-card-records');
+  const records=getBuyerCards();
+  if(!records.length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">暂无登记记录</div>';return;}
+  c.innerHTML='';
+  records.slice(0,20).forEach(r=>{
+    const div=document.createElement('div');
+    div.style.cssText='background:var(--surface);border-radius:var(--r-sm);border:1px solid var(--border);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px';
+    div.innerHTML=`<span style="font-size:18px">${r.card.icon}</span><div style="flex:1"><div style="font-size:13px;font-weight:500">${r.uid} · ${r.card.name}</div><div style="font-size:11px;color:var(--text3);margin-top:1px">${r.staff} · ${r.date}</div></div><span style="font-size:11px;background:var(--green-bg);color:var(--green);padding:2px 7px;border-radius:8px">已登记</span>`;
+    c.appendChild(div);
+  });
+}
+
+// ═══════════════ LEADERBOARD ═══════════════
+function renderLeaderboard() {
+  const scores=getScores(); const stats=getStats();
+  const sorted=STAFF.map(n=>({name:n,score:scores[n]||0,stats:stats[n]||{consult:0,convert:0,bundle:0,days:0}})).sort((a,b)=>b.score-a.score);
+  const maxScore=sorted[0]?.score||1;
+  const awards=getAwards();
+  const awardCounts={};
+  STAFF.forEach(n=>{awardCounts[n]={tea:0,gift:0,star:0}});
+  awards.forEach(a=>{if(awardCounts[a.target]){if(a.type==='奶茶')awardCounts[a.target].tea++;else if(a.type==='小礼物')awardCounts[a.target].gift++;else if(a.type==='老板看见')awardCounts[a.target].star++;}});
+
+  const rankIcons=['🥇','🥈','🥉','4️⃣'];
+  const lb=document.getElementById('lb-rows');
+  lb.innerHTML='';
+  sorted.forEach((s,i)=>{
+    const cvr=s.stats.consult>0?((s.stats.convert/s.stats.consult)*100).toFixed(1)+'%':'—';
+    const aw=awardCounts[s.name];
+    const row=document.createElement('div');
+    row.className='lb-row';
+    row.innerHTML=`
+      <div class="lb-award">${rankIcons[i]||'—'}</div>
+      <div class="member-avatar" style="background:${COLORS[s.name]}">${s.name[0]}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span class="lb-name">${s.name}</span>
+          ${aw.tea?`<span style="font-size:11px">🧋×${aw.tea}</span>`:''}
+          ${aw.gift?`<span style="font-size:11px">🎁×${aw.gift}</span>`:''}
+          ${aw.star?`<span style="font-size:11px">⭐×${aw.star}</span>`:''}
+        </div>
+        <div class="lb-bars">
+          <div class="lb-bar-row"><span class="lb-bar-lbl">总积分</span><div class="lb-bar-track"><div class="lb-bar-fill" style="width:${maxScore?Math.round(s.score/maxScore*100):0}%;background:${COLORS[s.name]}"></div></div></div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">转化率 ${cvr} · 联带 ${s.stats.bundle}单 · ${s.stats.days}天</div>
+      </div>
+      <div class="lb-score">${s.score}</div>`;
+    lb.appendChild(row);
+  });
+
+  // Data board
+  const dr=document.getElementById('data-rows');
+  dr.innerHTML='';
+  const dataSorted=[...sorted].sort((a,b)=>{
+    const ar=a.stats.consult>0?a.stats.convert/a.stats.consult:0;
+    const br2=b.stats.consult>0?b.stats.convert/b.stats.consult:0;
+    return br2-ar;
+  });
+  dataSorted.forEach((s,i)=>{
+    const cvr=s.stats.consult>0?((s.stats.convert/s.stats.consult)*100).toFixed(1)+'%':'—';
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border)';
+    if(i===dataSorted.length-1)row.style.borderBottom='none';
+    row.innerHTML=`<span style="font-size:16px">${['🥇','🥈','🥉','4️⃣'][i]}</span>
+    <div class="member-avatar" style="background:${COLORS[s.name]};width:28px;height:28px;font-size:12px">${s.name[0]}</div>
+    <div style="flex:1"><div style="font-size:13px;font-weight:600">${s.name}</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:1px">咨询${s.stats.consult} · 成交${s.stats.convert} · 联带${s.stats.bundle}单</div></div>
+    <div style="font-size:18px;font-weight:700;color:var(--green)">${cvr}</div>`;
+    dr.appendChild(row);
+  });
+}
+
+// ═══════════════ FEEDBACK ═══════════════
+function renderFeedback() {
+  const fb=getFeedback();
+  const fixList=fb.filter(f=>f.type==='fix');
+  const ideaList=fb.filter(f=>f.type==='idea');
+  const shareList=fb.filter(f=>f.type==='share');
+  const render=(list,id,tag)=>{
+    const c=document.getElementById(id);
+    if(!list.length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">暂无记录</div>';return;}
+    c.innerHTML='';
+    list.forEach(f=>{
+      const div=document.createElement('div');
+      div.className='fb-item';
+      div.innerHTML=`<div class="fb-tag ${f.type}">${tag}</div><div class="fb-content">${f.content}</div><div class="fb-meta">${f.staff} · ${f.date}</div>`;
+      c.appendChild(div);
+    });
+  };
+  render(fixList,'fb-fix-list','🔧 堵漏洞');
+  render(ideaList,'fb-idea-list','💡 找方向');
+  render(shareList,'fb-share-list','🌟 亮点案例');
+}
+
+// ═══════════════ BOSS PANEL ═══════════════
+function renderBossPanel() {
+  if(!bossUnlocked) return;
+  const records=getRecords();
+  const todayRecs=records.filter(r=>r.date===TODAY);
+  const c=document.getElementById('boss-reports');
+  if(!todayRecs.length){c.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:13px">今日暂无提交记录</div>';return;}
+  c.innerHTML='';
+  todayRecs.forEach(r=>{
+    const div=document.createElement('div');
+    div.className='member-card';
+    div.innerHTML=`<div class="member-hd" onclick="this.nextElementSibling.classList.toggle('open')">
+      <div class="member-avatar" style="background:${COLORS[r.staff]}">${r.staff[0]}</div>
+      <div class="member-info"><div class="member-name">${r.staff}</div><div class="member-stats">今日 +${r.score}分 · 咨询${r.consult} · 成交${r.convert}</div></div>
+      <span class="score-chip">+${r.score}分</span>
+    </div>
+    <div class="member-body"><div class="preview-box" style="font-size:12px;max-height:200px;overflow-y:auto">${r.text}</div></div>`;
+    c.appendChild(div);
+  });
+  renderAwardFeed();
+  renderBossComments();
+}
+
+function selAwardTarget(name, btn) {
+  document.querySelectorAll('#award-target .staff-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel'); currentAwardTarget=name;
+}
+
+function giveAward(type, icon, pts) {
+  if(!currentAwardTarget){toast('请先选择奖励给谁');return;}
+  const note=document.getElementById('award-note').value.trim();
+  const awards=getAwards();
+  awards.unshift({target:currentAwardTarget,type,icon,pts,note,date:TODAY,ts:Date.now()});
+  saveAwards(awards);
+  // Add to scores
+  const scores=getScores();
+  scores[currentAwardTarget]=(scores[currentAwardTarget]||0)+pts;
+  saveScores(scores);
+  document.getElementById('award-note').value='';
+  renderAwardFeed();
+  toast(`${icon} 已奖励给${currentAwardTarget} +${pts}分`);
+}
+
+function renderAwardFeed() {
+  const awards=getAwards();
+  const c=document.getElementById('award-feed-list');
+  if(!c)return;
+  if(!awards.length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">暂无奖励记录</div>';return;}
+  c.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.className='award-feed';
+  awards.slice(0,20).forEach(a=>{
+    const div=document.createElement('div');
+    div.className='award-feed-item';
+    div.innerHTML=`<div class="award-icon">${a.icon}</div><div class="award-text"><strong>${a.target}</strong> 收到 ${a.type} <span style="color:var(--green);font-weight:600">+${a.pts}分</span>${a.note?'<br><span style="color:var(--text2)">「'+a.note+'」</span>':''}<div class="award-time">${a.date}</div></div>`;
+    wrap.appendChild(div);
+  });
+  c.appendChild(wrap);
+}
+
+function saveBossComment() {
+  const txt=document.getElementById('boss-comment').value.trim();
+  if(!txt){toast('请输入点评内容');return;}
+  const comments=getComments();
+  comments.unshift({text:txt,date:TODAY,ts:Date.now()});
+  saveComments(comments);
+  document.getElementById('boss-comment').value='';
+  renderBossComments();
+  toast('点评已发布 ✅');
+}
+
+function renderBossComments() {
+  const c=document.getElementById('boss-comment-list');
+  if(!c)return;
+  const comments=getComments();
+  if(!comments.length){c.innerHTML='';return;}
+  c.innerHTML='';
+  comments.slice(0,10).forEach(cm=>{
+    const div=document.createElement('div');
+    div.style.cssText='background:var(--gold-bg);border:1px solid #E8D070;border-radius:var(--r-sm);padding:12px 14px;margin-bottom:6px';
+    div.innerHTML=`<div style="font-size:11px;color:var(--gold);font-weight:600;margin-bottom:4px">👑 老板点评 · ${cm.date}</div><div style="font-size:13px;color:var(--text);line-height:1.6">${cm.text}</div>`;
+    c.appendChild(div);
+  });
+}
+
+function lockBoss() {
+  bossUnlocked=false;
+  document.getElementById('boss-locked').style.display='';
+  document.getElementById('boss-content').style.display='none';
+}
+
+// ═══════════════ HISTORY ═══════════════
+function filterHistory(name, btn) {
+  document.querySelectorAll('#panel-history .staff-row .staff-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel'); histFilter=name; renderHistory();
+}
+function renderHistory() {
+  const records=getRecords();
+  const filtered=histFilter==='全部'?records:records.filter(r=>r.staff===histFilter);
+  const c=document.getElementById('hist-list');
+  c.innerHTML='';
+  if(!filtered.length){c.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3);font-size:13px">暂无记录</div>';return;}
+  filtered.forEach(r=>{
+    const div=document.createElement('div');
+    div.style.cssText='background:var(--surface);border-radius:var(--r);border:1px solid var(--border);margin-bottom:8px;overflow:hidden';
+    div.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;-webkit-user-select:none;user-select:none" onclick="this.nextElementSibling.classList.toggle('open')">
+      <div class="member-avatar" style="background:${COLORS[r.staff]};width:32px;height:32px;font-size:13px">${r.staff[0]}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">${r.staff} · ${r.date}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px">+${r.score}分 · 咨询${r.consult} · 成交${r.convert}</div></div>
+      <span style="color:var(--text3);font-size:16px">›</span>
+    </div>
+    <div class="member-body" style="border-top:1px solid var(--border);padding:14px 16px;display:none">
+      <div class="preview-box" style="font-size:12px">${r.text}</div>
+    </div>`;
+    div.querySelector('.member-body').style.display='none';
+    div.querySelector('[onclick]').addEventListener('click',function(){
+      const body=this.nextElementSibling;
+      body.style.display=body.style.display==='none'?'block':'none';
+    });
+    c.appendChild(div);
+  });
+}
+
+// ═══════════════ PIN ═══════════════
+function openPin(){pinBuffer='';renderPinDots();document.getElementById('pin-error').textContent='';document.getElementById('pin-overlay').classList.add('open');}
+function pinInput(n){if(pinBuffer.length>=6)return;pinBuffer+=n;renderPinDots();if(pinBuffer.length===6)setTimeout(checkPin,100);}
+function pinDel(){pinBuffer=pinBuffer.slice(0,-1);renderPinDots();}
+function pinClear(){pinBuffer='';renderPinDots();}
+function renderPinDots(){document.querySelectorAll('.pin-dot').forEach((d,i)=>{d.classList.toggle('filled',i<pinBuffer.length);});}
+function checkPin(){
+  if(pinBuffer===BOSS_PIN){
+    document.getElementById('pin-overlay').classList.remove('open');
+    bossUnlocked=true;
+    document.getElementById('boss-locked').style.display='none';
+    document.getElementById('boss-content').style.display='block';
+    renderBossPanel();
+  } else {
+    document.getElementById('pin-error').textContent='密码错误，请重试';
+    pinBuffer=''; renderPinDots();
+  }
+}
+
+// ═══════════════ TOAST ═══════════════
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+
+// INIT CALLS
+renderAwardFeed();
+renderBossComments();
+</script>
+</body>
+</html>
